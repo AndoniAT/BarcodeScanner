@@ -31,4 +31,4 @@ Aucune bibliothèque n'est imposée.
 
 ## Configuration de Stripe
 
-Pour réaliser l'application vous allez avoir besoin de créer un compte [Lien](https://stripe.com/fr "Stripe").
+Pour réaliser l'application vous allez avoir besoin de créer un compte [Stripe](https://stripe.com/fr "Stripe").
