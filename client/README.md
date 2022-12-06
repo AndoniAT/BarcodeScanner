@@ -5,7 +5,7 @@
 Il est nécessaire de connaître l'adresse IP de votre machine sur le réseau car l'émulateur a son propre réseau donc pas le même localhost. Vous pouvez la connaître via cette commande : 
 
 ```shell
-ip a
+ip a # ou ipconfig ou ifconfig
 ```
 
 Installation des dépendences :
