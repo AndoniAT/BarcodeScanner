@@ -8,6 +8,8 @@ export default function CheckoutScreen() {
     const [loading, setLoading] = useState(false);
     const [paymentIntentId, setPaymentIntentId] = useState<string>("");
 
+    const apiUrl = Constants.expoConfig.extra.apiUrl;
+
     const userId = 1;
     const items = [
         {
@@ -17,7 +19,7 @@ export default function CheckoutScreen() {
     ];
 
     const fetchPaymentSheetParams = async () => {
-        const response = await fetch(`${Constants.expoConfig.extra.apiUrl}/payments/`, {
+        const response = await fetch(`${apiUrl}/payments/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -65,7 +67,7 @@ export default function CheckoutScreen() {
             Alert.alert(`Error code: ${error.code}`, error.message);
         } else {
             const paymentIntent = `pi_${paymentIntentId.split("_")[1]}`;
-            const response = await fetch(`${Constants.expoConfig.extra.apiUrl}/payments/check/${paymentIntent}`, {
+            const response = await fetch(`${apiUrl}/payments/check/${paymentIntent}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
