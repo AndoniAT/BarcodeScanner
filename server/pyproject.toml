@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "server"
+version = "0.1.0"
+description = ""
+authors = ["Maxence Lambard <maxence.lambard@univ-lehavre.fr>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.87.0"
+uvicorn = {extras = ["standard"], version = "^0.19.0"}
+pydantic = "^1.10.2"
+stripe = "^5.0.0"
+sqlalchemy = "^1.4.44"
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
