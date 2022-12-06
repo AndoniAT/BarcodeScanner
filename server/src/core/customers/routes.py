@@ -1,18 +1,13 @@
-import os
 from typing import List, Optional
 
-import stripe
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from ..database import get_db
 from .models import Customer
+
+from ..database import get_db
+from .controllers import add_customer, get_customer, get_customers
 from .schemas import CustomerSchema
-
-sk_stripe: str = os.environ.get("STRIPE_SK")
-pk_stripe: str = os.environ.get("STRIPE_PK")
-stripe.api_key = sk_stripe
-
 
 customers_router = APIRouter(
     prefix="/customers",
@@ -21,35 +16,20 @@ customers_router = APIRouter(
 
 
 @customers_router.get('/', response_model=List[CustomerSchema])
-def get_customers(
-    db: Session = Depends(get_db)
+def read_customers(
+    offset: int = 0,
+    limit: int = Query(default=100, lte=100),
 ):
-    customers: List[Customer] = db.query(Customer).all()
-
-    return customers
+    return get_customers(offset, limit)
 
 
 @customers_router.get('/{customer_id}', response_model=Optional[CustomerSchema])
-def get_customer(
+def read_customer(
     customer_id: int,
-    db: Session = Depends(get_db)
 ):
-    customer: Optional[Customer] = db.query(
-        Customer).filter(Customer.id == customer_id).first()
-
-    return customer
+    return get_customer(customer_id)
 
 
 @customers_router.post('/')
-def add_customer(
-    db: Session = Depends(get_db)
-):
-    customer = stripe.Customer.create()
-
-    customer_db: Customer = Customer(stripe_id=customer["id"])
-
-    db.add(customer_db)
-    db.commit()
-    db.refresh(customer_db)
-
-    return customer_db
+def create_customer():
+    return add_customer()

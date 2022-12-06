@@ -1,9 +1,15 @@
+import os
+
+import stripe
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import customers, items, payments
 from .database import Base, SessionLocal, engine
 
+sk_stripe: str = os.environ.get("STRIPE_SK")
+pk_stripe: str = os.environ.get("STRIPE_PK")
+stripe.api_key = sk_stripe
 
 def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)

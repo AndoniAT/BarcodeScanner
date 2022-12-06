@@ -7,17 +7,16 @@ import stripe
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from ..customers.controllers import get_customer
+
+from .controllers import get_payments_by_customer
+
 from ..customers.models import Customer
 from ..database import get_db
 from ..items.models import Item, PurchasedItem
 from .models import Payment
 from .schemas import (PaymentCheckSchema, PaymentCreateSchema, PaymentSchema,
                       PaymentSheetSchema)
-
-sk_stripe: str = os.environ.get("STRIPE_SK")
-pk_stripe: str = os.environ.get("STRIPE_PK")
-stripe.api_key = sk_stripe
-
 
 payments_router = APIRouter(
     prefix="/payments",
@@ -29,24 +28,17 @@ payments_router = APIRouter(
 def get_payments(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    db: Session = Depends(get_db)
 ):
-    payments: List[Payment] = db.query(
-        Payment).offset(offset).limit(limit).all()
-
-    return payments
+    return get_payments(offset, limit)
 
 
 @payments_router.get('/{customer_id}', response_model=List[PaymentSchema])
 def get_payments_by_customer_id(
     customer_id: int,
+    offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    db: Session = Depends(get_db)
 ):
-    payments: List[Payment] = db.query(Payment).filter(
-        Payment.customer_id == customer_id).offset(offset).limit(limit).all()
-
-    return payments
+    return get_payments_by_customer(customer_id, offset, limit)
 
 
 @payments_router.post('/', response_model=PaymentSheetSchema)
@@ -54,11 +46,7 @@ def create_sheet(
     payment_sheet: PaymentCreateSchema,
     db: Session = Depends(get_db)
 ):
-    customer: Optional[Customer] = db.query(Customer).filter(
-        Customer.id == payment_sheet.customer_id).first()
-
-    if customer is None:
-        raise HTTPException(status_code=404, detail="Customer not found.")
+    customer: Optional[Customer] = get_customer(payment_sheet.customer_id)
 
     ephemeral_key = stripe.EphemeralKey.create(
         customer=customer.stripe_id,

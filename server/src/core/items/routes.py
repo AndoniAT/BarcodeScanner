@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from .controllers import add_item, delete_item, get_item, get_items
 from .models import Item
 from .schemas import AddItemSchema, ItemSchema
 
@@ -14,58 +15,30 @@ item_router = APIRouter(
 
 
 @item_router.post("/", response_model=ItemSchema)
-def add_item(
+def create_item(
     item: AddItemSchema,
     db: Session = Depends(get_db)
 ):
-    if item.price < 100:
-        raise HTTPException(
-            status_code=404, detail="Price must be greater or equal than 100.")
-
-    db_item: Item = Item(**item.dict())
-
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-
-    return db_item
+    return add_item(item)
 
 
 @item_router.get("/{item_id}", response_model=ItemSchema)
-def get_item(
+def read_item(
     item_id: int,
-    db: Session = Depends(get_db)
 ):
-    item: Optional[Item] = db.query(Item).filter(Item.id == item_id).first()
-
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found.")
-
-    return item
+    return get_item(item_id)
 
 
 @item_router.get("/", response_model=List[ItemSchema])
-def get_items(
+def read_items(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    db: Session = Depends(get_db)
 ):
-    items: List[Item] = db.query(Item).offset(offset).limit(limit).all()
-
-    return items
+    return get_items(offset, limit)
 
 
 @item_router.delete("/", response_model=ItemSchema)
 def remove_item(
     item_id: int,
-    db: Session = Depends(get_db)
 ):
-    item: Optional[Item] = db.query(Item).filter(Item.id == item_id).first()
-
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found.")
-
-    db.delete(item)
-    db.commit()
-
-    return item
+    return delete_item(item_id)
