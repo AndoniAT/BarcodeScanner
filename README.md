@@ -2,7 +2,7 @@
 
 |   Nom   | Prénom |
 |---------|--------|
-|   Jane  |  Doe   |
+|   Doe   |  Jane  |
 
 ## Travail à réaliser
 
