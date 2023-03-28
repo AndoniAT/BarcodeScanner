@@ -1,7 +1,8 @@
 from typing import List, Optional
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
+
+from ..exceptions import ConditionException, NotFoundException
 
 from ..database import engine
 from .models import Item
@@ -11,8 +12,7 @@ from .schemas import AddItemSchema
 def add_item(item: AddItemSchema) -> Optional[Item]:
     with Session(engine) as db:
         if item.price < 100:
-            raise HTTPException(
-                status_code=404, detail="Price must be greater or equal than 100.")
+            raise ConditionException(detail="Price must be greater or equal than 100")
 
         db_item: Item = Item(**item.dict())
 
@@ -29,7 +29,7 @@ def delete_item(item_id: int) -> Optional[Item]:
             Item).filter(Item.id == item_id).first()
 
         if not item:
-            raise HTTPException(status_code=404, detail="Item not found.")
+            raise NotFoundException("Item not found")
 
         db.delete(item)
         db.commit()
@@ -43,7 +43,7 @@ def get_item(item_id: int) -> Optional[Item]:
             Item).filter(Item.id == item_id).first()
 
         if not item:
-            raise HTTPException(status_code=404, detail="Item not found.")
+            raise NotFoundException("Item not found")
 
         return item
 

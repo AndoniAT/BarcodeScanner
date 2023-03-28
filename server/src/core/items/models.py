@@ -24,7 +24,7 @@ class PurchasedItem(Base):
     payment_id = Column(Integer, ForeignKey("payments.id"))
     payment = relationship("Payment", back_populates="purchased_items")
 
-    customer_id = Column(Integer, ForeignKey("customers.id"))
+    customer_id = Column(String, ForeignKey("customers.id"))
     customer = relationship("Customer", back_populates="purchased_items")
 
     item_id = Column(Integer, ForeignKey("items.id"))

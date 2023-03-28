@@ -1,9 +1,18 @@
 from pydantic import BaseModel
 
 
-class CustomerSchema(BaseModel):
-    id: int
-    stripe_id: str
+class CustomerBase(BaseModel):
+    id: str
+    email: str
+
+    class Config:
+        orm_mode = True
+
+class CustomerSchema(CustomerBase):
+    pass
+
+class AddCustomerSchema(BaseModel):
+    email: str
 
     class Config:
         orm_mode = True

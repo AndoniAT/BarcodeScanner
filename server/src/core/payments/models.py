@@ -1,5 +1,5 @@
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, String, DateTime
 from sqlalchemy.orm import relationship
 
 from ..database import Base
@@ -13,7 +13,7 @@ class Payment(Base):
 
     checkout_date = Column(DateTime, nullable=True)
 
-    customer_id = Column(Integer, ForeignKey("customers.id"))
+    customer_id = Column(String, ForeignKey("customers.id"))
     customer = relationship("Customer", back_populates="payments")
 
     purchased_items = relationship("PurchasedItem")

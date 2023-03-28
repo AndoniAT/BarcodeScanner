@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
 from ..database import Base
@@ -7,8 +7,9 @@ from ..database import Base
 class Customer(Base):
     __tablename__ = "customers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    stripe_id = Column(String)
-
+    # Stripe customer id
+    id = Column(String, primary_key=True, autoincrement=False)
+    email = Column(String, unique=True, index=True)
+    
     purchased_items = relationship("PurchasedItem")
     payments = relationship("Payment")

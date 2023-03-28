@@ -1,23 +1,23 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query
 
-from ..database import get_db
 from .controllers import add_item, delete_item, get_item, get_items
-from .models import Item
 from .schemas import AddItemSchema, ItemSchema
 
 item_router = APIRouter(
     prefix="/items",
-    tags=["Items"]
+    tags=["Items"],
+    responses={
+        400: {"description": "Bad Request"},
+        404: {"description": "Not found"},
+    }
 )
 
 
 @item_router.post("/", response_model=ItemSchema)
 def create_item(
     item: AddItemSchema,
-    db: Session = Depends(get_db)
 ):
     return add_item(item)
 

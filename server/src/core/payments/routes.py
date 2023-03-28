@@ -1,26 +1,28 @@
 import datetime
 import os
-from collections import Counter
 from typing import List, Optional
 
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from ..customers.controllers import get_customer
-
-from .controllers import get_payments_by_customer
-
 from ..customers.models import Customer
 from ..database import get_db
+from ..exceptions import ConditionException, NotFoundException
 from ..items.models import Item, PurchasedItem
+from .controllers import get_payments_by_customer
 from .models import Payment
 from .schemas import (PaymentCheckSchema, PaymentCreateSchema, PaymentSchema,
                       PaymentSheetSchema)
 
 payments_router = APIRouter(
     prefix="/payments",
-    tags=["Payments"]
+    tags=["Payments"],
+    responses={
+        400: {"description": "Bad Request"},
+        404: {"description": "Not found"},
+    }
 )
 
 
@@ -28,18 +30,27 @@ payments_router = APIRouter(
 def get_payments(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
+    db: Session = Depends(get_db)
 ):
-    return get_payments(offset, limit)
+    # ERROR: RecursionError: maximum recursion depth exceeded
+    # return get_payments(offset, limit)
+
+    return db.query(Payment).offset(offset).limit(limit).all()
 
 
 @payments_router.get('/{customer_id}', response_model=List[PaymentSchema])
 def get_payments_by_customer_id(
-    customer_id: int,
+    customer_id: str,
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
+    db: Session = Depends(get_db)
 ):
-    return get_payments_by_customer(customer_id, offset, limit)
+    # ERROR: Parent instance <Payment at 0x7f88a9185f90> is not bound to 
+    #   a Session; lazy load operation of attribute 'customer' cannot 
+    #   proceed (Background on this error at: https://sqlalche.me/e/14/bhk3)
+    # return get_payments_by_customer(customer_id, offset, limit)
 
+    return db.query(Payment).filter(Payment.customer_id == customer_id).offset(offset).limit(limit).all()
 
 @payments_router.post('/', response_model=PaymentSheetSchema)
 def create_sheet(
@@ -49,22 +60,20 @@ def create_sheet(
     customer: Optional[Customer] = get_customer(payment_sheet.customer_id)
 
     ephemeral_key = stripe.EphemeralKey.create(
-        customer=customer.stripe_id,
+        customer=customer.id,
         stripe_version='2022-08-01',
     )
 
     customer_stripe = stripe.Customer.retrieve(
-        customer.stripe_id
+        customer.id
     )
 
-    pending_items: dict = {
-        pi.id: pi.amount for pi in payment_sheet.pending_items}
+    pending_items: dict = {pi.id: pi.amount for pi in payment_sheet.pending_items}
     items_id: List[int] = [pi.id for pi in payment_sheet.pending_items]
-    items: List[Item] = db.query(Item).filter(
-        Item.id.in_(items_id)).all()
+    items: List[Item] = db.query(Item).filter(Item.id.in_(items_id)).all()
 
     if len(items) != len(payment_sheet.pending_items):
-        raise HTTPException(status_code=404, detail="Item not found.")
+        raise NotFoundException(detail="Item not found.")
 
     price: int = sum([pending_items[i.id] * i.price for i in items])
 
@@ -103,9 +112,8 @@ def create_sheet(
         "paymentIntent": payment_intent.client_secret,
         "ephemeralKey": ephemeral_key.secret,
         "customer": customer_stripe["id"],
-        "publishableKey": pk_stripe
+        "publishableKey": os.environ.get("STRIPE_PK")
     }
-
 
 @payments_router.post('/check/{payment_intent_id}', response_model=PaymentSchema)
 def check_sheet_status_and_get_purchased_items(
@@ -120,21 +128,18 @@ def check_sheet_status_and_get_purchased_items(
     ).first()
 
     if not payment:
-        raise HTTPException(
-            status_code=404, detail="Payment not found or already checked.")
+        raise NotFoundException(detail="Payment not found or already checked.")
 
     payment_intent = stripe.PaymentIntent.retrieve(
         payment_intent_id
     )
 
     if not payment_intent:
-        raise HTTPException(
-            status_code=404, detail="Payment intent not found.")
+        raise NotFoundException(detail="Payment intent not found.")
 
     if not payment_intent.status == "succeeded":
-        raise HTTPException(
-            status_code=404, detail="Unsuccessful payment intent.")
-
+        raise ConditionException(detail="Unsuccessful payment intent.")
+    
     amount: int = payment_intent.amount_received
 
     purchased_items: List[PurchasedItem] = db.query(PurchasedItem).filter(
@@ -143,13 +148,12 @@ def check_sheet_status_and_get_purchased_items(
 
     price: int = sum([pi.amount * pi.item.price for pi in purchased_items])
 
-    # vérification du prix par rapport au montant payé
+    # validation of the price against the amount paid
     if not price == amount:
         print(price, amount)
-        raise HTTPException(
-            status_code=404, detail="Price does not match with amount paid.")
+        raise ConditionException(detail="Price does not match with amount paid.")
 
-    # validation du paiement pour éviter une fraude
+    # payment validation to avoid fraud
     payment.is_checked = True
     payment.checkout_date = datetime.datetime.now()
 
