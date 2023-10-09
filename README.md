@@ -15,7 +15,7 @@ Le TP est à réaliser individuellement.
 |            | C1       | Maîtriser l’API Stripe Javascript                                                                  |        |          |
 |            | C3       | Maîtriser l’architecture logicielle d’un projet (services, composants, types, interfaces, classes) |        |          |
 |            | C3       | Maîtriser l’écriture de code asynchrone                                                            |        |          |
-|            | C3       | Savoir documenter son code                                                                         |        |          |
+|            | C3       | Savoir rédiger une documentaion                                                                    |        |          |
 | D4         | C1       | Maîtriser git                                                                                      |        |          |
 |            | C4       | Savoir respecter l’énoncé et l’échéance                                                            |        |          |
 
@@ -29,7 +29,7 @@ Vous allez avoir besoin des technologies suivantes :
 
 ## Travail à réaliser
 
-Vous devez réaliser une application de paiement à l'aide de Stripe.
+Vous devez réaliser une application d'achat d'objets en tout genre à l'aide de Stripe.
 
 Elle doit comprendre les pages/fonctionnalités suivantes :
 
@@ -43,11 +43,30 @@ Elle doit comprendre les pages/fonctionnalités suivantes :
     - [ ] Possibilité de retirer du panier un article scanné
     - [ ] Lorsque qu'un article est ajouté plusieurs fois, afficher un indicateur précisant le nombre du même article
     - [ ] Possibilité d'augmenter la quantité d'un article déjà scanné
-    - [ ] Possibilité de payer les articles sélectionnés
+    - [ ] Possibilité de payer les articles sélectionnés à l'aide de Stripe
+    - [ ] Sauvergarde du panier pour de futurs achats
 - [ ] Un historique des articles payés
+- [ ] Un [thème jour/nuit](https://m2.material.io/design/color/dark-theme.html#ui-application)
+
 
 Le projet est composé des choses suivantes :
-- Server : Une API afin d'utiliser Stripe. Vous pouvez implémenter la votre
-- Client : Une application React Native de départ, c'est ici que vous allez développer l'application
+- [Server](./server/README.md) : Une API développée avec FastAPI afin d'utiliser Stripe. Vous pouvez implémenter la votre
+- [Client](./client/README.md) : Une application React Native de départ, c'est ici que vous allez développer l'application
 
-Aucune bibliothèque n'est imposée.
+Il est imposé d'utiliser `Expo.SQLite` pour la persistence des données au niveau du client.
+
+***Il est important de configurer le serveur avant le client.***
+
+## Informations
+
+Le projet a été créé l'aide de la commande suivante :
+
+```shell
+npx create-expo-app -t expo-template-blank-typescript
+```
+
+Il est possible de lancer l'application dans un émulateur Android et/ou iOS :
+
+```shell
+npx expo run:android  # npx expo run:ios
+```

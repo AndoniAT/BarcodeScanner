@@ -37,3 +37,47 @@ Pour arrêter et supprimer le serveur :
 ```shell
 docker compose down
 ```
+
+## Avant d'utiliser le client
+
+Pour que l'exemple du client puisse fonctionner correctement, il faut exécuter les commandes suivantes.
+
+- Ajouter un `item` **banane** :
+```curl
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "banane",
+  "price": 199
+}'
+```
+
+La réponse attendue est :
+```json
+{
+  "name": "banane",
+  "price": 199,
+  "id": 1
+}
+```
+
+- Ainsi qu'un `customer`. L'identifiant unique généré du `customer` correspond à l'identifiant Stripe du client :
+```curl
+curl -X 'POST' \
+  'http://localhost:8000/customers/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "example@example.xyz"
+}'
+```
+
+La réponse attendue est :
+```json
+{
+  "id": "cus_OmpJZapHkM2keT",
+  "email": "example@example.xyz"
+}
+```
