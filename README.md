@@ -43,7 +43,7 @@ Elle doit comprendre les pages/fonctionnalités suivantes :
     - [ ] Possibilité de retirer du panier un article scanné
     - [ ] Lorsque qu'un article est ajouté plusieurs fois, afficher un indicateur précisant le nombre du même article
     - [ ] Possibilité d'augmenter la quantité d'un article déjà scanné
-    - [ ]Possibilité de payer les articles sélectionnés
+    - [ ] Possibilité de payer les articles sélectionnés
 - [ ] Un historique des articles payés
 
 Le projet est composé des choses suivantes :
