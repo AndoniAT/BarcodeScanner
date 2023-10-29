@@ -27,6 +27,41 @@ async function saveItem(id) {
       await SecureStore.setItemAsync('items', newValue);
 }
 
+
+async function removeItem( id ) {
+    let result = await SecureStore.getItemAsync('items');
+    res = JSON.parse(result);
+    let filter = res.filter(i => i.id == id );
+    if( filter.length > 0 ) {
+        let element = filter[0]
+        let idx = res.indexOf(element);
+           if( res[idx].amount > 0 ) {
+           res[idx].amount--;
+       }
+       if( res[idx].amount == 0) {
+            res.splice( idx, 1 )
+       }
+    }
+   let newValue = JSON.stringify( [ ...res ] );
+   await SecureStore.setItemAsync('items', newValue);
+}
+
+async function addAmountItem( id ) {
+    let result = await SecureStore.getItemAsync('items');
+    res = JSON.parse(result);
+    let filter = res.filter(i => i.id == id );
+    if( filter.length > 0 ) {
+        let element = filter[0];
+        let idx = res.indexOf(element);
+           if( res[idx].amount > 0 ) {
+           res[idx].amount++;
+       }
+    }
+   let newValue = JSON.stringify( [ ...res ] );
+   await SecureStore.setItemAsync('items', newValue);
+}
+
+
 export default function CheckoutScreen({navigation}) {
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const [loading, setLoading] = useState(false);
@@ -150,6 +185,7 @@ export default function CheckoutScreen({navigation}) {
     async function fetchData() {
         const itemsCollection = await getValueFor(itemsKeys);
         let listItems = [];
+        if(itemsCollection.length == 0 ) onChangeItem([]);
         for( let idx = 0 ; idx < itemsCollection.length ; idx++ ) {
                 let item = itemsCollection[idx];
                 fetch(`${apiUrl}/items/1`, { method: 'GET', 'Content-Type': 'application/json', }
@@ -160,7 +196,7 @@ export default function CheckoutScreen({navigation}) {
                     listItems.push( element );
                     onChangeItem(listItems);
                 }
-    );
+                );
         }
       }
 
@@ -169,7 +205,7 @@ export default function CheckoutScreen({navigation}) {
                   onPress={() => console.log('Item touched')}
                   style={styles.itemContainer}>
                   <View style={{backgroundColor: 'white'}}>
-                    <Text>{rowData.item}</Text>
+                    <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} ({rowData.item.amount})</Text></View>
                     </View>
               </TouchableOpacity>
     );
@@ -178,20 +214,30 @@ export default function CheckoutScreen({navigation}) {
         return (
                   <View style={styles.hiddenContainer}>
                       <TouchableOpacity
-                      style={[styles.hiddenButton, styles.deleteButton]}
+                      style={[styles.hiddenButton, styles.actionButton]}
                             onPress={() => {
-                                    deleteItem( rowData.item.key, params ).then(()=> {
+                                    removeItem( rowData.item.id ).then(()=> {
                                         fetchData();
                                     });
                                 }
                             }
                       >
-                        <Text style={styles.buttonText}>X</Text>
+                        <Text style={styles.buttonText}>-</Text>
                       </TouchableOpacity>
+                      <TouchableOpacity
+                                            style={[styles.hiddenButton, styles.actionButton]}
+                                                  onPress={() => {
+                                                          addAmountItem( rowData.item.id , params ).then(()=> {
+                                                              fetchData();
+                                                          });
+                                                      }
+                                                  }
+                                            >
+                                              <Text style={styles.buttonText}>+</Text>
+                                            </TouchableOpacity>
                         </View>
                   );
     }
-    let liste = itemsValues.length > 0 ? itemsValues.map( i => <View style={styles.elementContainer}><Text style={{fontSize: 25}}>{i.name} ({i.amount})</Text></View> ) : [];
     return (
         <SafeAreaView style={styles.principalContainer}>
             <View style={styles.container}>
@@ -205,7 +251,7 @@ export default function CheckoutScreen({navigation}) {
                 <View style={{ padding: 20, height: '100%' }}>
                       <SwipeListView
                          style={{ maxHeight: screenHeight * 0.4 }}
-                         data={liste}
+                         data={itemsValues}
                          renderItem={(data) => renderItem(data)}
                          renderHiddenItem={(data) => renderHiddenItem(data, null)}
                          rightOpenValue={-150}
@@ -245,11 +291,11 @@ const styles = StyleSheet.create({
         height: 80,
     },
 
-    deleteButton: {
-      borderBottomRightRadius: 8,
-      borderTopRightRadius: 8,
-      backgroundColor: '#ED6666',
-      width: 100
+    actionButton: {
+      backgroundColor: '#DDDDDD',
+      width: 50,
+      borderRadius: '50%',
+      height: 40
     },
 
     itemContainer: {
