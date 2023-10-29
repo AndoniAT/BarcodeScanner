@@ -6,6 +6,7 @@ Il est nécessaire de connaître l'adresse IP de votre machine sur le réseau ca
 
 ```shell
 ip a # ou ipconfig ou ifconfig
+hostname -I
 ```
 
 Installation des dépendences :

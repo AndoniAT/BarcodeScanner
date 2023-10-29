@@ -1,7 +1,20 @@
 import { StripeProvider } from '@stripe/stripe-react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, TextInput, Button, Dimensions } from 'react-native';
+import React , {useState, useEffect} from 'react';
 import Constants from 'expo-constants';
 import CheckoutScreen from './CheckoutScreen';
+import ItemsScreen from './ItemsScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+const Stack = createNativeStackNavigator();
 
+function HomeScreen({navigation}) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>  
+      <CheckoutScreen navigation={navigation}/>
+    </View>
+  );
+}
 export default function App() {
   const stripePK = Constants.expoConfig.extra.stripePK;
 
@@ -10,7 +23,15 @@ export default function App() {
       publishableKey={stripePK}
       merchantIdentifier="merchant.com.example"
     >
-      <CheckoutScreen />
+      <NavigationContainer>
+            <Stack.Navigator>
+                <Stack.Screen name="Barre Code Scanner" component={HomeScreen} />
+          </Stack.Navigator>
+    </NavigationContainer>
     </StripeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+
+});
