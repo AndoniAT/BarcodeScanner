@@ -88,7 +88,7 @@ export default function CheckoutScreen({navigation}) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                "pending_items": items,
+                "pending_items": itemsValues,
                 "customer_id": userId
             })
         });
