@@ -9,6 +9,9 @@ import axios from 'axios';
 import { SwipeListView } from  'react-native-swipe-list-view';
 const screenHeight = Dimensions.get('window').height;
 
+async function deleteAllItems() {
+  await SecureStore.setItemAsync('items', '[]');
+}
 async function saveItem(id) {
       let result = await SecureStore.getItemAsync('items');
       if (result == null ) result = "[]";
@@ -70,35 +73,38 @@ export default function CheckoutScreen({navigation}) {
     const [scanned, setScanned] = useState(false);
     const [itemsKeys, onChangeKey] = useState('items');
     const [itemsValues, onChangeItem] = useState( [] );
-
+    //deleteAllItems();
     const apiUrl = Constants.expoConfig.extra.apiUrl;
 
     const userId = "cus_OsVFxOpN2P8IKP";
-    const items = [
+    /*const items = [
         {
             "id": 1,
             "amount": 2
         }
-    ];
+    ];*/
 
     const fetchPaymentSheetParams = async () => {
+        await fetchData();
+        const items = itemsValues.map( i => { return { id: i.id, amount: i.amount } })
         const response = await fetch(`${apiUrl}/payments/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                "pending_items": itemsValues,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                "pending_items": items,
                 "customer_id": userId
             })
         });
-        
+
         const { paymentIntent, ephemeralKey, customer } = await response.json();
         return {
             paymentIntent,
             ephemeralKey,
             customer,
         };
+
     };
 
     const initializePaymentSheet = async () => {
@@ -127,6 +133,8 @@ export default function CheckoutScreen({navigation}) {
     };
 
     const openPaymentSheet = async () => {
+        await fetchData();
+        initializePaymentSheet();
         const { error } = await presentPaymentSheet();
 
         if (error) {
@@ -151,8 +159,9 @@ export default function CheckoutScreen({navigation}) {
         (async () => {
           const { status } = await BarCodeScanner.requestPermissionsAsync();
           setHasPermission(status === 'granted');
-          initializePaymentSheet();
-          fetchData();
+          fetchData().then( () => {
+            initializePaymentSheet();
+          });
         })();
       }, [hasPermission]);
 
@@ -168,8 +177,9 @@ export default function CheckoutScreen({navigation}) {
 
       const handleBarCodeScanned = ({ type, data }) => {
               //setScanned(true);
-              alert(`Type: ${type}\nData: ${data}`);
-              saveItem(1).then(() => {
+
+              //alert(`Type: ${type}\nData: ${data}`);
+              saveItem(data).then(() => {
                 fetchData();
               });
 
@@ -188,27 +198,35 @@ export default function CheckoutScreen({navigation}) {
         if(itemsCollection.length == 0 ) onChangeItem([]);
         for( let idx = 0 ; idx < itemsCollection.length ; idx++ ) {
                 let item = itemsCollection[idx];
-                fetch(`${apiUrl}/items/1`, { method: 'GET', 'Content-Type': 'application/json', }
-                ).then(r => {
-                    return r.json();
-                }).then( element => {
-                    element.amount = item.amount;
-                    listItems.push( element );
-                    onChangeItem(listItems);
+                try {
+                  let response = await fetch(`${apiUrl}/items/${item.id}`, {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  let element = await response.json();
+                  element.amount = item.amount;
+                  listItems.push( element );
+                } catch (error) {
+                  console.error('Erreur lors de la récupération des données :', error);
                 }
-                );
         }
+        await onChangeItem(listItems);
       }
 
-    renderItem = rowData => (
-              <TouchableOpacity
-                  onPress={() => console.log('Item touched')}
-                  style={styles.itemContainer}>
-                  <View style={{backgroundColor: 'white'}}>
-                    <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} ({rowData.item.amount})</Text></View>
-                    </View>
-              </TouchableOpacity>
-    );
+    renderItem = rowData => {
+    let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
+        return (
+                             <TouchableOpacity
+                                 onPress={() => console.log('Item touched')}
+                                 style={styles.itemContainer}>
+                                 <View style={{backgroundColor: 'white'}}>
+                                   <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} {c}</Text></View>
+                                   </View>
+                             </TouchableOpacity>
+                   );
+    }
 
     renderHiddenItem = (rowData, rowMap, params) => {
         return (
@@ -217,7 +235,9 @@ export default function CheckoutScreen({navigation}) {
                       style={[styles.hiddenButton, styles.actionButton]}
                             onPress={() => {
                                     removeItem( rowData.item.id ).then(()=> {
-                                        fetchData();
+                                        fetchData().then( () => {
+                                                    initializePaymentSheet();
+                                                  });
                                     });
                                 }
                             }
@@ -228,7 +248,9 @@ export default function CheckoutScreen({navigation}) {
                                             style={[styles.hiddenButton, styles.actionButton]}
                                                   onPress={() => {
                                                           addAmountItem( rowData.item.id , params ).then(()=> {
-                                                              fetchData();
+                                                              fetchData().then( () => {
+                                                                          initializePaymentSheet();
+                                                                        });
                                                           });
                                                       }
                                                   }
@@ -259,7 +281,7 @@ export default function CheckoutScreen({navigation}) {
                 </View>
             </View>
             <View style={styles.btnPay}>
-                <Button disabled={!loading} title="Payer" onPress={openPaymentSheet}/>
+                <Button title="Payer" onPress={openPaymentSheet}/>
             </View>
         </SafeAreaView>
     );
