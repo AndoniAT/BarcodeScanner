@@ -1,69 +1,55 @@
 import { useStripe } from "@stripe/stripe-react-native";
 import Constants from "expo-constants";
 import React, { useEffect, useState } from "react";
-import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from "react-native";
 import { Camera } from 'expo-camera';
 import { BarCodeScanner } from 'expo-barcode-scanner';
-import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { SwipeListView } from  'react-native-swipe-list-view';
 const screenHeight = Dimensions.get('window').height;
+import * as SQLite from "expo-sqlite";
 
-async function deleteAllItems() {
-  await SecureStore.setItemAsync('items', '[]');
-}
-async function saveItem(id) {
-      let result = await SecureStore.getItemAsync('items');
-      if (result == null ) result = "[]";
-      let res = JSON.parse(result);
-      let exists = res.filter( r => { return r.id == id });
-      let element = { id: id, amount: 1 };
+function openDatabase() {
+  if (Platform.OS === "web") {
+    return {
+      transaction: () => {
+        return {
+          executeSql: () => {},
+        };
+      },
+    };
+  }
 
-      if( exists.length > 0 ) {
-        element = exists[0];
-        element.amount++;
-      } else {
-        res.push(element);
-      }
-
-      let newValue = JSON.stringify(res);
-      await SecureStore.setItemAsync('items', newValue);
+  const db = SQLite.openDatabase("db.db");
+  return db;
 }
 
+const db = openDatabase();
 
-async function removeItem( id ) {
-    let result = await SecureStore.getItemAsync('items');
-    res = JSON.parse(result);
-    let filter = res.filter(i => i.id == id );
-    if( filter.length > 0 ) {
-        let element = filter[0]
-        let idx = res.indexOf(element);
-           if( res[idx].amount > 0 ) {
-           res[idx].amount--;
-       }
-       if( res[idx].amount == 0) {
-            res.splice( idx, 1 )
-       }
-    }
-   let newValue = JSON.stringify( [ ...res ] );
-   await SecureStore.setItemAsync('items', newValue);
+const sortArr = ( arr ) => {
+    return arr.sort( (a, b) => {
+        if(a.name < b.name) return -1;
+        if(a.name > b.name) return 1;
+        else return 0;
+    });
 }
-
-async function addAmountItem( id ) {
-    let result = await SecureStore.getItemAsync('items');
-    res = JSON.parse(result);
-    let filter = res.filter(i => i.id == id );
-    if( filter.length > 0 ) {
-        let element = filter[0];
-        let idx = res.indexOf(element);
-           if( res[idx].amount > 0 ) {
-           res[idx].amount++;
-       }
-    }
-   let newValue = JSON.stringify( [ ...res ] );
-   await SecureStore.setItemAsync('items', newValue);
+export function AddScreen({navigation}) {
+  const [value, onChangeValue] = useState('');
+  return(<Text>Hehe</Text>);
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'start',  marginTop: 20}}>
+      <TextInput style={styles.input}  placeholder="Nouvelle tâche"  onChangeText={ text => onChangeValue(text)} />
+        <View style={{ backgroundColor: '#76D0FC', borderColor: '#CFCFCF', alignSelf: 'center', marginRight: 20 }}>
+           <Button title="Valider" color="white" onPress={() =>{
+                saveItemInCart(value).then(() => {
+                    navigation.navigate('To Do List')
+                });
+            }
+            }/>
+        </View>
+    </View>
+  );
 }
-
 
 export default function CheckoutScreen({navigation}) {
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -73,7 +59,7 @@ export default function CheckoutScreen({navigation}) {
     const [scanned, setScanned] = useState(false);
     const [itemsKeys, onChangeKey] = useState('items');
     const [itemsValues, onChangeItem] = useState( [] );
-    //deleteAllItems();
+    const [ isLoadingDb, setIsLoadingDb ] = useState(true);
     const apiUrl = Constants.expoConfig.extra.apiUrl;
 
     const userId = "cus_OsVFxOpN2P8IKP";
@@ -83,6 +69,85 @@ export default function CheckoutScreen({navigation}) {
             "amount": 2
         }
     ];*/
+
+    const saveItemInCart = async ( id ) => {
+        db.transaction( tx => {
+                        tx.executeSql(
+                             `select * from panier WHERE id_item = ?;`, [id],
+                              (txObj, resultSet) =>  {
+                                  let res = resultSet.rows._array;
+                                  // Si l'element l'item n'a pas été ajouté, l'inserer dans la base de données
+                                  if( res.length == 0 ) {
+                                      txObj.executeSql( 'insert into panier (id_item, amount) values (?, 1)', [id],
+                                      (txObj2, resultSet2) => {
+                                        let items = [...itemsValues];
+                                        try {
+                                            fetch(`${apiUrl}/items/${id}`, {
+                                                  method: 'GET',
+                                                  headers: {
+                                                    'Content-Type': 'application/json',
+                                                  }
+                                            }).then( r => {
+                                                return r.json();
+                                            }).then( element => {
+                                                element.amount = 1;
+                                                items.push( element );
+                                                items = sortArr(items);
+                                                onChangeItem(items);
+                                            } )
+                                        } catch (error) {
+                                           console.error('Erreur lors de la récupération des données :', error);
+                                        }
+                                      },
+                                      (txObj2, err ) => console.log( err )
+                                      )
+                                  } else {
+                                    // sinon, le modifier
+                                    txObj.executeSql( 'update panier SET amount = amount + 1 where id_item = ?;', [id],
+                                         (txObj2, resultSet2) => {
+                                           let items = [...itemsValues];
+                                           let item = items.filter( items => items.id == id )[0]
+                                           let idx = items.indexOf(item);
+                                           items[idx].amount++;
+                                           items = sortArr(items);
+                                           onChangeItem(items);
+                                         },
+                                         ( txObj2, err2 ) => console.log( err2 )
+                                    );
+                                  }
+                              },
+                              ( txObj, err ) =>  console.log(err)
+                        );
+                     });
+    }
+
+    const removeItemInCart = async function( id ) {
+        db.transaction( tx => {
+            tx.executeSql( 'update panier SET amount = amount - 1 where id_item = ?;', [id],
+                (txObj, resultSet) => {
+                    let items = [...itemsValues];
+                    let item = items.filter( items => items.id == id )[0]
+                    let idx = items.indexOf(item);
+                    items[idx].amount--;
+                    onChangeItem(items);
+                    if( items[idx].amount <= 0 ) {
+                        txObj.executeSql( 'delete from panier where id_item = ?;', [id],
+                        (txObj2, resultSet2) => {
+                            let items = [...itemsValues];
+                            let item = items.filter( items => items.id == id )[0]
+                            let idx = items.indexOf(item);
+                            items.splice( idx, 1 );
+                            items = sortArr(items);
+                            onChangeItem(items);
+                        },
+                        ( txObj2, err2 ) => console.log( err2 )
+                        );
+                    }
+                },
+                ( txObj, err ) => console.log( err )
+            );
+        });
+    }
 
     const fetchPaymentSheetParams = async () => {
         await fetchData();
@@ -123,11 +188,9 @@ export default function CheckoutScreen({navigation}) {
         });
 
         if (!error) {
-            console.log('no error');
             setPaymentIntentId(paymentIntent);
             setLoading(true);
         }else {
-            console.log('errroorrrr');
             console.log(error);
         }
     };
@@ -176,46 +239,48 @@ export default function CheckoutScreen({navigation}) {
       }
 
       const handleBarCodeScanned = ({ type, data }) => {
-              //setScanned(true);
-
-              //alert(`Type: ${type}\nData: ${data}`);
-              saveItem(data).then(() => {
-                fetchData();
-              });
-
-          };
-
-    async function getValueFor( key ) {
-       let result = await SecureStore.getItemAsync(key);
-       res = JSON.parse(result);
-       if (result) return res;
-       else alert('invalid')
-    }
+             saveItemInCart( data );
+      };
 
     async function fetchData() {
-        const itemsCollection = await getValueFor(itemsKeys);
-        let listItems = [];
-        if(itemsCollection.length == 0 ) onChangeItem([]);
-        for( let idx = 0 ; idx < itemsCollection.length ; idx++ ) {
-                let item = itemsCollection[idx];
-                try {
-                  let response = await fetch(`${apiUrl}/items/${item.id}`, {
-                    method: 'GET',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                  });
-                  let element = await response.json();
-                  element.amount = item.amount;
-                  listItems.push( element );
-                } catch (error) {
-                  console.error('Erreur lors de la récupération des données :', error);
-                }
-        }
-        await onChangeItem(listItems);
+         db.transaction((tx) => {
+              tx.executeSql('CREATE TABLE IF NOT EXISTS panier ( id INTEGER PRIMARY KEY AUTOINCREMENT, id_item INTEGER UNIQUE, amount INTEGER)')
+         });
+         db.transaction( tx => {
+            tx.executeSql(
+                `select * from panier;`, null,
+                (txObj, resultSet) =>  {
+                    let res = resultSet.rows._array;
+                    let items = [];
+                    res.forEach( r => {
+                        try {
+                            fetch(`${apiUrl}/items/${r.id_item}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                            }).then( r => {
+                                return r.json();
+                            }).then( element => {
+                                element.amount = r.amount;
+                                items.push( element );
+                                items = sortArr(items);
+                                onChangeItem(items);
+                            } )
+                        } catch (error) {
+                            console.error('Erreur lors de la récupération des données :', error);
+                        }
+                    });
+                    //onChangeItem(res);
+                },
+                ( txObj, err ) =>  console.log(err)
+            );
+         });
+
+         setIsLoadingDb(false)
       }
 
-    renderItem = rowData => {
+    const renderItem = rowData => {
     let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
         return (
                              <TouchableOpacity
@@ -228,40 +293,48 @@ export default function CheckoutScreen({navigation}) {
                    );
     }
 
-    renderHiddenItem = (rowData, rowMap, params) => {
+    const renderHiddenItem = (rowData, rowMap, params) => {
         return (
                   <View style={styles.hiddenContainer}>
-                      <TouchableOpacity
-                      style={[styles.hiddenButton, styles.actionButton]}
+                        <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
                             onPress={() => {
-                                    removeItem( rowData.item.id ).then(()=> {
-                                        fetchData().then( () => {
-                                                    initializePaymentSheet();
-                                                  });
+                                    removeItemInCart( rowData.item.id ).then(()=> {
+                                        fetchData().then( () => { initializePaymentSheet(); });
                                     });
                                 }
                             }
-                      >
-                        <Text style={styles.buttonText}>-</Text>
-                      </TouchableOpacity>
+                        >
+                            <Text style={styles.buttonText}>-</Text>
+                        </TouchableOpacity>
                       <TouchableOpacity
-                                            style={[styles.hiddenButton, styles.actionButton]}
-                                                  onPress={() => {
-                                                          addAmountItem( rowData.item.id , params ).then(()=> {
-                                                              fetchData().then( () => {
-                                                                          initializePaymentSheet();
-                                                                        });
-                                                          });
-                                                      }
-                                                  }
-                                            >
-                                              <Text style={styles.buttonText}>+</Text>
-                                            </TouchableOpacity>
+                            style={[styles.hiddenButton, styles.actionButton]}
+                            onPress={() => {
+                                saveItemInCart( rowData.item.id ).then(()=> {
+                                    fetchData().then( () => { initializePaymentSheet(); });
+                                });
+                            }}
+                      >
+                        <Text style={styles.buttonText}>+</Text>
+                        </TouchableOpacity>
                         </View>
                   );
     }
+
+     if( isLoadingDb ) {
+            return (
+                <View>
+                    <Text>Loading items...</Text>
+                </View>
+            )
+        }
+
     return (
         <SafeAreaView style={styles.principalContainer}>
+              <View style={{ flex:1,  flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, marginBottom: 20}}>
+                 <View style={{ backgroundColor: '#76D0FC', alignSelf: 'flex-start', marginRight: 20 }}>
+                     <Button title="Nouveau" color="white" onPress={() => { navigation.navigate('Add') } }/>
+                  </View>
+              </View>
             <View style={styles.container}>
                       <BarCodeScanner
                         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
@@ -298,7 +371,7 @@ const styles = StyleSheet.create({
     },
     scannedItemsSection: {
         height: '80%',
-        width: '100%'
+        width: '100%',
     },
     btnPay: {
         backgroundColor: '#4DD2D0',

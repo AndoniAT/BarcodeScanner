@@ -24,7 +24,8 @@
     "react-native": "0.70.5",
     "react-native-swipe-list-view": "^3.2.9",
     "react-native-web": "~0.18.9",
-    "react-navigation": "^5.0.0"
+    "react-navigation": "^5.0.0",
+    "expo-sqlite": "~11.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
