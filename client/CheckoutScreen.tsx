@@ -148,7 +148,6 @@ export default function CheckoutScreen({navigation}) {
             "amount": 2
         }
     ];*/
-
     const removeItemInCart = async function( id ) {
         db.transaction( tx => {
             tx.executeSql( 'update panier SET amount = amount - 1 where id_item = ?;', [id],
@@ -345,12 +344,20 @@ export default function CheckoutScreen({navigation}) {
     return (
         <SafeAreaView style={styles.principalContainer}>
               <View style={{ flex:1,  flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, marginBottom: 20}}>
-                 <View style={{ backgroundColor: '#76D0FC', alignSelf: 'flex-start', marginRight: 20 }}>
-                     <Button title="Nouveau" color="white" onPress={() => { navigation.navigate('Add') } }/>
-                  </View>
-                  <View style={{ backgroundColor: '#76D0FC', alignSelf: 'flex-start', marginRight: 20 }}>
-                        <Button title="Historique" color="white" onPress={() => { navigation.navigate('History') } }/>
-                   </View>
+                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
+                       onPress={() => {
+                         navigation.navigate('Add');
+                       }}
+                     >
+                       <Text style={{ color: 'black' }}>Nouveau</Text>
+                     </TouchableOpacity>
+                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
+                            onPress={() => {
+                                navigation.navigate('History');
+                            }}
+                     >
+                        <Text style={{ color: 'black' }}>Historique</Text>
+                     </TouchableOpacity>
               </View>
             <View style={styles.container}>
                       <BarCodeScanner
@@ -406,7 +413,7 @@ const styles = StyleSheet.create({
     actionButton: {
       backgroundColor: '#DDDDDD',
       width: 50,
-      borderRadius: '50%',
+      borderRadius: 50,
       height: 40
     },
 

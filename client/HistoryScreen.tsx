@@ -14,7 +14,6 @@ export default function AddItemScreen({navigation}) {
     const [itemsValues, onChangeItem] = useState( [] );
     const apiUrl = Constants.expoConfig.extra.apiUrl;
     const userId = "cus_OwIeB1ZbHc2opD";
-
     async function fetchData() {
          fetch(`${apiUrl}/payments/${userId}`, {
             method: 'GET',
@@ -77,7 +76,6 @@ const styles = {
     scrollView: {
         backgroundColor: '#DDDDDD',
         width: '100%',
-        flex:'center',
         alignText: 'center',
     }
 }

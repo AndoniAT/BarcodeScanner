@@ -26,14 +26,18 @@ export default function AddItemScreen({navigation}) {
       return (
         <View style={styles.inputAddPageContainer}>
             <TextInput placeholder="Nouvelle tâche" style={styles.inputAdd}  onChangeText={ text => onChangeValue(text)} />
-            <View style={{width: '100%'}}>
-                <View style={styles.btnContainer}>
-                   <Button title="Valider" color="white" onPress={() =>{
+            <View>
+                <View style={{  marginTop: 10, marginBottom: 20}}>
+                <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10}}
+                    onPress={() =>{
                         saveItemInCart(value, itemsValues, onChangeItem, apiUrl).then(() => {
                             navigation.navigate('Barre Code Scanner')
-                        });
+                            });
+                        }
                     }
-                    }/>
+                >
+                    <Text style={{ color: 'black' }}>Valider</Text>
+                </TouchableOpacity>
                 </View>
             </View>
         </View>
@@ -43,13 +47,10 @@ export default function AddItemScreen({navigation}) {
 const styles = StyleSheet.create({
     inputAddPageContainer : {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'start',
         paddingTop: 50,
         width: '100%',
-        flex: 1,
-        alignItems: 'center',
-        textAlign: 'center'
+        alignItems: 'center'
+
     },
     inputAdd : {
         borderColor: 'black',
