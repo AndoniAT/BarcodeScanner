@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, TextInput,
 import React , {useState, useEffect} from 'react';
 import Constants from 'expo-constants';
 import CheckoutScreen from './CheckoutScreen';
-import AddScreen from './CheckoutScreen';
+import AddScreen from './AddItemScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();

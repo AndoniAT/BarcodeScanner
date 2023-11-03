@@ -33,22 +33,101 @@ const sortArr = ( arr ) => {
         else return 0;
     });
 }
-export function AddScreen({navigation}) {
-  const [value, onChangeValue] = useState('');
-  return(<Text>Hehe</Text>);
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'start',  marginTop: 20}}>
-      <TextInput style={styles.input}  placeholder="Nouvelle tâche"  onChangeText={ text => onChangeValue(text)} />
-        <View style={{ backgroundColor: '#76D0FC', borderColor: '#CFCFCF', alignSelf: 'center', marginRight: 20 }}>
-           <Button title="Valider" color="white" onPress={() =>{
-                saveItemInCart(value).then(() => {
-                    navigation.navigate('To Do List')
+
+export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
+    return new Promise((resolve, reject) => {
+        fetch(`${apiUrl}/items/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then( r => {
+                return r.json();
+            }).then( element => {
+                    console.log('element'); console.log(element);
+                    // L'element existe, on peut continuer
+                    if(element.message || element.detail) {
+                        alert("Element invalide");
+                        reject();
+                        return;
+                    }
+                    db.transaction( tx => {
+                            tx.executeSql(
+                                `select * from panier WHERE id_item = ?;`, [id],
+                                (txObj, resultSet) =>  {
+                                    let res = resultSet.rows._array;
+                                    // Si l'element l'item n'a pas été ajouté, l'inserer dans la base de données
+                                    if( res.length == 0 ) {
+                                        txObj.executeSql( 'insert into panier (id_item, amount) values (?, 1)', [id],
+                                        (txObj2, resultSet2) => {
+                                            let items = [...itemsValues];
+                                            element.amount = 1;
+                                            items.push( element );
+                                            items = sortArr(items);
+                                            fn(items);
+                                            resolve();
+                                        },
+                                        (txObj2, err ) => console.log( err )
+                                        )
+                                    } else {
+                                        // sinon, le modifier
+                                            txObj.executeSql( 'update panier SET amount = amount + 1 where id_item = ?;', [id],
+                                                (txObj2, resultSet2) => {
+                                                    let items = [...itemsValues];
+                                                    let item = items.filter( items => items.id == id )[0]
+                                                    let idx = items.indexOf(item);
+                                                    items[idx].amount++;
+                                                    items = sortArr(items);
+                                                    fn(items);
+                                                    resolve();
+                                                },
+                                                ( txObj2, err2 ) => console.log( err2 )
+                                            );
+                                        }
+                                },
+                                ( txObj, err ) =>  {
+                                    alert('error ' + err);
+                                    reject();
+                                }
+                            );
+                        });
+                } ).catch( err => {
+                    reject();
+                    console.log('Erreur dans le serveur ' + err)
+            });
+    });
+}
+
+export function setItems( apiUrl, fn ) {
+    db.transaction( tx => {
+        tx.executeSql(
+            `select * from panier;`, null,
+            (txObj, resultSet) =>  {
+                let res = resultSet.rows._array;
+                let items = [];
+                res.forEach( r => {
+                    try {
+                        fetch(`${apiUrl}/items/${r.id_item}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then( r => {
+                            return r.json();
+                        }).then( element => {
+                            element.amount = r.amount;
+                            items.push( element );
+                            items = sortArr(items);
+                            fn(items);
+                        } )
+                    } catch (error) {
+                        console.error('Erreur lors de la récupération des données :', error);
+                    }
                 });
-            }
-            }/>
-        </View>
-    </View>
-  );
+            },
+            ( txObj, err ) =>  console.log(err)
+        );
+    });
 }
 
 export default function CheckoutScreen({navigation}) {
@@ -69,57 +148,6 @@ export default function CheckoutScreen({navigation}) {
             "amount": 2
         }
     ];*/
-
-    const saveItemInCart = async ( id ) => {
-        db.transaction( tx => {
-                        tx.executeSql(
-                             `select * from panier WHERE id_item = ?;`, [id],
-                              (txObj, resultSet) =>  {
-                                  let res = resultSet.rows._array;
-                                  // Si l'element l'item n'a pas été ajouté, l'inserer dans la base de données
-                                  if( res.length == 0 ) {
-                                      txObj.executeSql( 'insert into panier (id_item, amount) values (?, 1)', [id],
-                                      (txObj2, resultSet2) => {
-                                        let items = [...itemsValues];
-                                        try {
-                                            fetch(`${apiUrl}/items/${id}`, {
-                                                  method: 'GET',
-                                                  headers: {
-                                                    'Content-Type': 'application/json',
-                                                  }
-                                            }).then( r => {
-                                                return r.json();
-                                            }).then( element => {
-                                                element.amount = 1;
-                                                items.push( element );
-                                                items = sortArr(items);
-                                                onChangeItem(items);
-                                            } )
-                                        } catch (error) {
-                                           console.error('Erreur lors de la récupération des données :', error);
-                                        }
-                                      },
-                                      (txObj2, err ) => console.log( err )
-                                      )
-                                  } else {
-                                    // sinon, le modifier
-                                    txObj.executeSql( 'update panier SET amount = amount + 1 where id_item = ?;', [id],
-                                         (txObj2, resultSet2) => {
-                                           let items = [...itemsValues];
-                                           let item = items.filter( items => items.id == id )[0]
-                                           let idx = items.indexOf(item);
-                                           items[idx].amount++;
-                                           items = sortArr(items);
-                                           onChangeItem(items);
-                                         },
-                                         ( txObj2, err2 ) => console.log( err2 )
-                                    );
-                                  }
-                              },
-                              ( txObj, err ) =>  console.log(err)
-                        );
-                     });
-    }
 
     const removeItemInCart = async function( id ) {
         db.transaction( tx => {
@@ -218,6 +246,14 @@ export default function CheckoutScreen({navigation}) {
         }
     };
 
+    const focusFunction = async () => { fetchData(); };
+    useEffect(() => {
+        navigation.addListener('focus', focusFunction);
+        return () => {
+            navigation.removeListener('focus', focusFunction);
+        };
+    }, []);
+
     useEffect(() => {
         (async () => {
           const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -239,94 +275,62 @@ export default function CheckoutScreen({navigation}) {
       }
 
       const handleBarCodeScanned = ({ type, data }) => {
-             saveItemInCart( data );
+             saveItemInCart( data, itemsValues, onChangeItem, apiUrl);
       };
 
     async function fetchData() {
          db.transaction((tx) => {
               tx.executeSql('CREATE TABLE IF NOT EXISTS panier ( id INTEGER PRIMARY KEY AUTOINCREMENT, id_item INTEGER UNIQUE, amount INTEGER)')
+              //tx.executeSql('DELETE FROM panier');
          });
-         db.transaction( tx => {
-            tx.executeSql(
-                `select * from panier;`, null,
-                (txObj, resultSet) =>  {
-                    let res = resultSet.rows._array;
-                    let items = [];
-                    res.forEach( r => {
-                        try {
-                            fetch(`${apiUrl}/items/${r.id_item}`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            }
-                            }).then( r => {
-                                return r.json();
-                            }).then( element => {
-                                element.amount = r.amount;
-                                items.push( element );
-                                items = sortArr(items);
-                                onChangeItem(items);
-                            } )
-                        } catch (error) {
-                            console.error('Erreur lors de la récupération des données :', error);
-                        }
-                    });
-                    //onChangeItem(res);
-                },
-                ( txObj, err ) =>  console.log(err)
-            );
-         });
-
+         setItems( apiUrl, onChangeItem );
          setIsLoadingDb(false)
       }
 
     const renderItem = rowData => {
-    let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
+        let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
         return (
-                             <TouchableOpacity
-                                 onPress={() => console.log('Item touched')}
-                                 style={styles.itemContainer}>
-                                 <View style={{backgroundColor: 'white'}}>
-                                   <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} {c}</Text></View>
-                                   </View>
-                             </TouchableOpacity>
-                   );
+            <TouchableOpacity onPress={() => console.log('Item touched')} style={styles.itemContainer}>
+                <View style={{backgroundColor: 'white'}}>
+                    <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} {c}</Text></View>
+                </View>
+            </TouchableOpacity>
+        );
     }
 
     const renderHiddenItem = (rowData, rowMap, params) => {
         return (
-                  <View style={styles.hiddenContainer}>
-                        <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
-                            onPress={() => {
-                                    removeItemInCart( rowData.item.id ).then(()=> {
-                                        fetchData().then( () => { initializePaymentSheet(); });
-                                    });
-                                }
-                            }
-                        >
-                            <Text style={styles.buttonText}>-</Text>
-                        </TouchableOpacity>
-                      <TouchableOpacity
-                            style={[styles.hiddenButton, styles.actionButton]}
-                            onPress={() => {
-                                saveItemInCart( rowData.item.id ).then(()=> {
-                                    fetchData().then( () => { initializePaymentSheet(); });
-                                });
-                            }}
-                      >
-                        <Text style={styles.buttonText}>+</Text>
-                        </TouchableOpacity>
-                        </View>
-                  );
+            <View style={styles.hiddenContainer}>
+                <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
+                    onPress={() => {
+                            removeItemInCart( rowData.item.id ).then(()=> {
+                                fetchData().then( () => { initializePaymentSheet(); });
+                            });
+                        }
+                    }
+                >
+                    <Text style={styles.buttonText}>-</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
+                    onPress={() => {
+                        saveItemInCart( rowData.item.id, itemsValues, onChangeItem, apiUrl ).then(()=> {
+                            fetchData().then( () => { initializePaymentSheet(); });
+                        });
+                    }}
+                >
+                    <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+            </View>
+        );
     }
 
      if( isLoadingDb ) {
-            return (
-                <View>
-                    <Text>Loading items...</Text>
-                </View>
-            )
-        }
+        return (
+            <View>
+                <Text>Loading items...</Text>
+            </View>
+        )
+     }
 
     return (
         <SafeAreaView style={styles.principalContainer}>
