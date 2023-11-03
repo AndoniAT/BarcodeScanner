@@ -23,6 +23,9 @@ API_URL={API_URL} STRIPE_PK={STRIPE_PK} npm run android
 
 La clé publique `STRIPE_PK` est disponible depuis le dashboard de Stripe.
 
+== Veuillez d'ajouter votre user id dans le fichier variables_config.tsx ==
+
+
 === BARRE CODES ===
 Les codes Qr et codes de barres se trouvent dans le dossier SCAN_CODES
 avec 7 elements d'exemple.

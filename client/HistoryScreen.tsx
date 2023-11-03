@@ -1,19 +1,11 @@
-import { useStripe } from "@stripe/stripe-react-native";
-import Constants from "expo-constants";
 import React, { useEffect, useState } from "react";
 import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput } from "react-native";
-import { Camera } from 'expo-camera';
-import { BarCodeScanner } from 'expo-barcode-scanner';
-import axios from 'axios';
-import { SwipeListView } from  'react-native-swipe-list-view';
-const screenHeight = Dimensions.get('window').height;
 import { setItems, saveItemInCart } from './CheckoutScreen';
+import { userId, apiUrl } from './variables_config'
 import * as SQLite from "expo-sqlite";
 
 export default function AddItemScreen({navigation}) {
     const [itemsValues, onChangeItem] = useState( [] );
-    const apiUrl = Constants.expoConfig.extra.apiUrl;
-    const userId = "cus_OwIeB1ZbHc2opD";
     async function fetchData() {
          fetch(`${apiUrl}/payments/checked/${userId}`, {
             method: 'GET',
