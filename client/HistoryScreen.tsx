@@ -15,7 +15,7 @@ export default function AddItemScreen({navigation}) {
     const apiUrl = Constants.expoConfig.extra.apiUrl;
     const userId = "cus_OwIeB1ZbHc2opD";
     async function fetchData() {
-         fetch(`${apiUrl}/payments/${userId}`, {
+         fetch(`${apiUrl}/payments/checked/${userId}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -25,7 +25,8 @@ export default function AddItemScreen({navigation}) {
          } ).then( elements => {
             elements = elements.filter( e => e.is_checked );
             onChangeItem( elements );
-         } );
+         } ).catch(e => {
+         })
     }
 
     useEffect(() => {
@@ -37,15 +38,15 @@ export default function AddItemScreen({navigation}) {
                 <View style={styles.inputHistoryPageContainer}>
                 {itemsValues.map((element, index) => (
                      <View style={styles.historyItem}>
-                        <Text key={index}>Date: { new Date(element.checkout_date).toLocaleDateString()}</Text>
-                        <Text key={index}>Total payé: {
+                        <Text>Date: { new Date(element.checkout_date).toLocaleDateString()}</Text>
+                        <Text>Total payé: {
                                 element.purchased_items.map( i => i.item.price*i.amount)
                                 .reduce( ( ac, cur ) => { return ac + cur; }, 0)
                                 }
                         </Text>
-                        <Text key={index}>Produits: </Text>
+                        <Text style={{marginTop: 10}}>Produits: </Text>
                         {element.purchased_items.map( i => {
-                            return <Text key={index}>- {i.item.name} ({i.amount})</Text>
+                            return <Text>- {i.item.name} ({i.amount})</Text>
                         })}
                      </View>
                 ))}

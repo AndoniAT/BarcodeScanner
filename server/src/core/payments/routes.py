@@ -15,6 +15,7 @@ from .controllers import get_payments_by_customer
 from .models import Payment
 from .schemas import (PaymentCheckSchema, PaymentCreateSchema, PaymentSchema,
                       PaymentSheetSchema)
+from sqlalchemy import desc
 
 payments_router = APIRouter(
     prefix="/payments",
@@ -36,6 +37,24 @@ def get_payments(
     # return get_payments(offset, limit)
 
     return db.query(Payment).offset(offset).limit(limit).all()
+
+@payments_router.get('/checked/{customer_id}', response_model=List[PaymentSchema])
+def get_payments_by_customer_id(
+    customer_id: str,
+    offset: int = 0,
+    limit: int = Query(default=100, lte=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Payment).filter( (Payment.customer_id == customer_id) & (Payment.is_checked == True)).order_by(desc(Payment.checkout_date)).offset(offset).limit(limit).all()
+
+@payments_router.get('/checked', response_model=List[PaymentSchema])
+def get_payments(
+    offset: int = 0,
+    limit: int = Query(default=100, lte=100),
+    db: Session = Depends(get_db)
+):
+
+    return db.query(Payment).filter(Payment.is_checked == True).offset(offset).limit(limit).all()
 
 
 @payments_router.get('/{customer_id}', response_model=List[PaymentSchema])

@@ -139,6 +139,9 @@ export default function CheckoutScreen({navigation}) {
     const [itemsKeys, onChangeKey] = useState('items');
     const [itemsValues, onChangeItem] = useState( [] );
     const [ isLoadingDb, setIsLoadingDb ] = useState(true);
+    const [ showCamera, setShowCamera ] = useState(false);
+    const [isCameraAvailable, setIsCameraAvailable] = useState(null);
+
     const apiUrl = Constants.expoConfig.extra.apiUrl;
 
     const userId = "cus_OwIeB1ZbHc2opD";
@@ -256,6 +259,7 @@ export default function CheckoutScreen({navigation}) {
     };
 
     const focusFunction = async () => { fetchData(); };
+
     useEffect(() => {
         navigation.addListener('focus', focusFunction);
         return () => {
@@ -265,13 +269,20 @@ export default function CheckoutScreen({navigation}) {
 
     useEffect(() => {
         (async () => {
-          const { status } = await BarCodeScanner.requestPermissionsAsync();
+          /*const { status } = await BarCodeScanner.requestPermissionsAsync();
+
+          setHasPermission(status === 'granted');*/
+
+          const { status } = await Camera.requestCameraPermissionsAsync();
+          console.log('status');
+          console.log(status)
           setHasPermission(status === 'granted');
+
           fetchData().then( () => {
             initializePaymentSheet();
           });
         })();
-      }, [hasPermission]);
+      }, []);
 
       if (hasPermission === null) {
          // L'autorisation est en cours de vérification, vous pouvez afficher un indicateur de chargement ici.
@@ -283,8 +294,9 @@ export default function CheckoutScreen({navigation}) {
          return <Text>No access to camera</Text>;
       }
 
-      const handleBarCodeScanned = ({ type, data }) => {
+      const handleBarCodeScanned = ({ type, data }) => {console.log('scannn');
              saveItemInCart( data, itemsValues, onChangeItem, apiUrl);
+             setShowCamera(false);
       };
 
     async function fetchData() {
@@ -341,6 +353,29 @@ export default function CheckoutScreen({navigation}) {
         )
      }
 
+    if( showCamera ) {
+        return (
+            <View style={{width: '100%', height: '100%', alignItems: 'center'}}>
+                <View style={{width: '30%', height: '10%', width: '100%', alignItems:'center', paddingTop: 10}}>
+                    <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, width: '20%' }}
+                        onPress={() => {
+                            setShowCamera(false)
+                         }}
+                    >
+                    <Text style={{ color: 'black' }}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+              <View style={{width: '80%', height: '80%', backgroundColor: 'crimson'}}>
+                <BarCodeScanner
+                    onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    style={StyleSheet.absoluteFillObject}
+                />
+                {scanned && <Text>Scanned!</Text>}
+                </View>
+            </View>
+          );
+    }
+
     return (
         <SafeAreaView style={styles.principalContainer}>
               <View style={{ flex:1,  flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, marginBottom: 20}}>
@@ -351,6 +386,19 @@ export default function CheckoutScreen({navigation}) {
                      >
                        <Text style={{ color: 'black' }}>Nouveau</Text>
                      </TouchableOpacity>
+                     {hasPermission ? (
+                       <TouchableOpacity
+                         style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
+                         onPress={() => {
+                           if (hasPermission) {
+                             setShowCamera(true);
+                           }
+                         }}
+                       >
+                         <Text style={{ color: 'black' }}>Scanner</Text>
+                       </TouchableOpacity>
+                     ) : null}
+
                      <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
                             onPress={() => {
                                 navigation.navigate('History');
@@ -359,13 +407,6 @@ export default function CheckoutScreen({navigation}) {
                         <Text style={{ color: 'black' }}>Historique</Text>
                      </TouchableOpacity>
               </View>
-            <View style={styles.container}>
-                      <BarCodeScanner
-                        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-                        style={StyleSheet.absoluteFillObject}
-                      />
-                      {scanned && <Text>Scanned!</Text>}
-             </View>
              <View style={styles.scannedItemsSection}>
                 <View style={{ padding: 20, height: '100%' }}>
                       <SwipeListView
