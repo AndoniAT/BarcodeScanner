@@ -242,7 +242,17 @@ export default function CheckoutScreen({navigation}) {
                 })
             });
 
-            if (response.status == 200) Alert.alert('Success', 'Your order is confirmed!');
+            if (response.status == 200) {
+                db.transaction( tx => {
+                        tx.executeSql( 'delete from panier;', null,
+                            (txObj, resultSet) => {
+                               onChangeItem([]);
+                            },
+                            ( txObj, err ) => console.log( err )
+                        );
+                    });
+                Alert.alert('Success', 'Your order is confirmed!');
+            }
         }
     };
 
