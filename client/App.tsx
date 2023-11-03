@@ -4,6 +4,7 @@ import React , {useState, useEffect} from 'react';
 import Constants from 'expo-constants';
 import CheckoutScreen from './CheckoutScreen';
 import AddScreen from './AddItemScreen';
+import HistoryScreen from './HistoryScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,14 @@ function AddScreenF({navigation}) {
   );
 }
 
+function HistoryScreenF({navigation}) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <HistoryScreen navigation={navigation}/>
+    </View>
+  );
+}
+
 
 export default function App() {
   const stripePK = Constants.expoConfig.extra.stripePK;
@@ -37,6 +46,7 @@ export default function App() {
             <Stack.Navigator>
                 <Stack.Screen name="Barre Code Scanner" component={HomeScreen} />
                 <Stack.Screen name="Add" component={AddScreenF} />
+                <Stack.Screen name="History" component={HistoryScreenF} />
           </Stack.Navigator>
     </NavigationContainer>
     </StripeProvider>

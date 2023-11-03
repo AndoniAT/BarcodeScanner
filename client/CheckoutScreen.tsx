@@ -141,7 +141,7 @@ export default function CheckoutScreen({navigation}) {
     const [ isLoadingDb, setIsLoadingDb ] = useState(true);
     const apiUrl = Constants.expoConfig.extra.apiUrl;
 
-    const userId = "cus_OsVFxOpN2P8IKP";
+    const userId = "cus_OwIeB1ZbHc2opD";
     /*const items = [
         {
             "id": 1,
@@ -338,6 +338,9 @@ export default function CheckoutScreen({navigation}) {
                  <View style={{ backgroundColor: '#76D0FC', alignSelf: 'flex-start', marginRight: 20 }}>
                      <Button title="Nouveau" color="white" onPress={() => { navigation.navigate('Add') } }/>
                   </View>
+                  <View style={{ backgroundColor: '#76D0FC', alignSelf: 'flex-start', marginRight: 20 }}>
+                        <Button title="Historique" color="white" onPress={() => { navigation.navigate('History') } }/>
+                   </View>
               </View>
             <View style={styles.container}>
                       <BarCodeScanner
