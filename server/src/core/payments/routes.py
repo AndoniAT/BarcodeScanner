@@ -126,8 +126,7 @@ def check_sheet_status_and_get_purchased_items(
         Payment.id == payment_intent_id,
         Payment.is_checked == False
     ).first()
-    print('check payment')
-    print(payment)
+
     if not payment:
         raise NotFoundException(detail="Payment not found or already checked.")
 
@@ -155,9 +154,7 @@ def check_sheet_status_and_get_purchased_items(
         raise ConditionException(detail="Price does not match with amount paid.")
 
     # payment validation to avoid fraud
-    print('set true')
     payment.is_checked = True
-    print(payment)
     payment.checkout_date = datetime.datetime.now()
 
     db.add(payment)
