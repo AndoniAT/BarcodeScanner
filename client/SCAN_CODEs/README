@@ -1,0 +1,70 @@
+Pour tester les codes à scanner pour ce projet
+veuillez de créer d'abord les items,
+ici  je vous fourni 7 items d'exemple
+
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "banane",
+  "price": 199
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "orange",
+  "price": 200
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "pomme",
+  "price": 200
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "poire",
+  "price": 300
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "lait",
+  "price": 350
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "fromage",
+  "price": 230
+}'
+
+curl -X 'POST' \
+  'http://localhost:8000/items/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "chips",
+  "price": 220
+}'
+
+
+

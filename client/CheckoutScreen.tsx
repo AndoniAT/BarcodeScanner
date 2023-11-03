@@ -410,7 +410,7 @@ export default function CheckoutScreen({navigation}) {
              <View style={styles.scannedItemsSection}>
                 <View style={{ padding: 20, height: '100%' }}>
                       <SwipeListView
-                         style={{ maxHeight: screenHeight * 0.4 }}
+                         style={{ maxHeight: screenHeight * 0.9, borderWidth: 1, borderColor: '#A9A9A9', padding: 10, borderRadius: 20, backgroundColor: "#DBDBDB" }}
                          data={itemsValues}
                          renderItem={(data) => renderItem(data)}
                          renderHiddenItem={(data) => renderHiddenItem(data, null)}
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     },
     scannedItemsSection: {
         height: '80%',
-        width: '100%',
+        width: '100%'
     },
     btnPay: {
         backgroundColor: '#4DD2D0',
