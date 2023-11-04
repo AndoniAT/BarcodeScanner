@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput } from "react-native";
 import { setItems, saveItemInCart } from './CheckoutScreen';
-import { userId, apiUrl } from './variables_config'
+import { userId, apiUrl, moodConfig } from './variables_config'
+import { setMode, getValueMood } from './modeApp'
 
 import * as SQLite from "expo-sqlite";
 
 export default function AddItemScreen({navigation}) {
     const [value, onChangeValue] = useState('');
     const [itemsValues, onChangeItem] = useState( [] );
-
+    const [modeApp, setModeApp] = useState('light');
     async function fetchData() {
          setItems( apiUrl, onChangeItem );
     }
 
     useEffect(() => {
-        fetchData();
+        (async () => {
+            const mode = await getValueMood();
+             setModeApp(mode);
+             fetchData();
+        })();
     }, []);
 
-      return (
-        <View style={styles.inputAddPageContainer}>
+   const stylesMode =  {
+         principalContainer: {
+               backgroundColor: modeApp == moodConfig.light.label ? moodConfig.light.color : moodConfig.dark.color
+         }
+  }
+
+    return (
+        <View style={[styles.inputAddPageContainer,  stylesMode.principalContainer ]}>
             <TextInput placeholder="Nouvelle tâche" style={styles.inputAdd}  onChangeText={ text => onChangeValue(text)} />
             <View>
                 <View style={{  marginTop: 10, marginBottom: 20}}>
@@ -44,7 +55,6 @@ const styles = StyleSheet.create({
         paddingTop: 50,
         width: '100%',
         alignItems: 'center'
-
     },
     inputAdd : {
         borderColor: 'black',

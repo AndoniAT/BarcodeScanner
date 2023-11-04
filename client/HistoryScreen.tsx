@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput } from "react-native";
 import { setItems, saveItemInCart } from './CheckoutScreen';
-import { userId, apiUrl } from './variables_config'
+import { userId, apiUrl, moodConfig } from './variables_config'
+import { setMode, getValueMood } from './modeApp'
 import * as SQLite from "expo-sqlite";
 
 export default function AddItemScreen({navigation}) {
     const [itemsValues, onChangeItem] = useState( [] );
+    const [modeApp, setModeApp] = useState('light');
     async function fetchData() {
          fetch(`${apiUrl}/payments/checked/${userId}`, {
             method: 'GET',
@@ -22,11 +24,21 @@ export default function AddItemScreen({navigation}) {
     }
 
     useEffect(() => {
+        (async () => {
+            const mode = await getValueMood();
+            setModeApp(mode);
+        })();
+
         fetchData();
     }, []);
 
+    const stylesMode =  {
+             principalContainer: {
+                   backgroundColor: modeApp == moodConfig.light.label ? moodConfig.light.color : moodConfig.dark.color
+             }
+      }
     return (
-            <ScrollView style={styles.scrollView}>
+            <ScrollView style={[ styles.scrollView, stylesMode.principalContainer ]}>
                 <View style={styles.inputHistoryPageContainer}>
                 {itemsValues.map((element, index) => (
                      <View style={styles.historyItem}>

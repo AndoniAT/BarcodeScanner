@@ -4,7 +4,8 @@ import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, Toucha
 import { Camera } from 'expo-camera';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { SwipeListView } from  'react-native-swipe-list-view';
-import { userId, apiUrl } from './variables_config'
+import { userId, apiUrl, moodConfig } from './variables_config'
+import { setMode, getValueMood } from './modeApp'
 const screenHeight = Dimensions.get('window').height;
 import * as SQLite from "expo-sqlite";
 
@@ -140,6 +141,7 @@ export default function CheckoutScreen({navigation}) {
     const [ isLoadingDb, setIsLoadingDb ] = useState(true);
     const [ showCamera, setShowCamera ] = useState(false);
     const [isCameraAvailable, setIsCameraAvailable] = useState(null);
+    const [modeApp, setModeApp] = useState('light');
 
     const removeItemInCart = async function( id ) {
         db.transaction( tx => {
@@ -262,10 +264,9 @@ export default function CheckoutScreen({navigation}) {
           /*const { status } = await BarCodeScanner.requestPermissionsAsync();
 
           setHasPermission(status === 'granted');*/
-
+          const mode = await getValueMood();
+          setModeApp(mode);
           const { status } = await Camera.requestCameraPermissionsAsync();
-          console.log('status');
-          console.log(status)
           setHasPermission(status === 'granted');
 
           fetchData().then( () => {
@@ -343,11 +344,17 @@ export default function CheckoutScreen({navigation}) {
         )
      }
 
+    const stylesMode =  {
+            principalContainer: {
+                backgroundColor: modeApp == moodConfig.light.label ? moodConfig.light.color : moodConfig.dark.color
+            }
+    }
+
     if( showCamera ) {
         return (
-            <View style={{width: '100%', height: '100%', alignItems: 'center'}}>
+            <View style={[ {width: '100%', height: '100%', alignItems: 'center', backgroundColor: 'crimson'},  stylesMode.principalContainer ]}>
                 <View style={{width: '30%', height: '10%', width: '100%', alignItems:'center', paddingTop: 10}}>
-                    <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, width: '20%' }}
+                    <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, width: '20%', justifyContent: 'center', alignItems: 'center' }}
                         onPress={() => {
                             setShowCamera(false)
                          }}
@@ -367,18 +374,34 @@ export default function CheckoutScreen({navigation}) {
     }
 
     return (
-        <SafeAreaView style={styles.principalContainer}>
+        <SafeAreaView style={[stylesMode.principalContainer, styles.principalContainer]}>
               <View style={{ flex:1,  flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, marginBottom: 20}}>
-                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
-                       onPress={() => {
-                         navigation.navigate('Add');
-                       }}
+                     <TouchableOpacity style={{ padding: 10, borderRadius: 100, marginRight: 10, alignItems: 'center'}}
+                        onPress={() => {
+                            setMode(modeApp == 'light' ? 'dark' : 'dark');
+                        }}
+
+                     >
+                        <TouchableOpacity style={{ backgroundColor: modeApp == 'light' ? 'black' : 'white' , padding: 10, borderRadius: 100, width: 10}}
+                                                onPress={() => {
+                                                    let newMode = modeApp == 'light' ? 'dark' : 'light';
+                                                    setMode(newMode);
+                                                    setModeApp(newMode);
+                                                }}
+                                             >
+                                              </TouchableOpacity>
+                                              <Text>Changer</Text>
+                      </TouchableOpacity>
+                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, maxHeight: 40 }}
+                        onPress={() => {
+                                    navigation.navigate('Add');
+                        }}
                      >
                        <Text style={{ color: 'black' }}>Nouveau</Text>
                      </TouchableOpacity>
                      {hasPermission ? (
                        <TouchableOpacity
-                         style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
+                         style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, maxHeight: 40  }}
                          onPress={() => {
                            if (hasPermission) {
                              setShowCamera(true);
@@ -389,7 +412,7 @@ export default function CheckoutScreen({navigation}) {
                        </TouchableOpacity>
                      ) : null}
 
-                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10 }}
+                     <TouchableOpacity style={{ backgroundColor: '#76D0FC', padding: 10, borderRadius: 10, marginRight: 10, maxHeight: 40 }}
                             onPress={() => {
                                 navigation.navigate('History');
                             }}
