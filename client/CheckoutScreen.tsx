@@ -1,6 +1,6 @@
 import { useStripe } from "@stripe/stripe-react-native";
 import React, { useEffect, useState } from "react";
-import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from "react-native";
+import { Alert, Text, Button, SafeAreaView, View, StyleSheet, Dimensions, TouchableWithoutFeedback, TouchableOpacity, ScrollView } from "react-native";
 import { Camera } from 'expo-camera';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { SwipeListView } from  'react-native-swipe-list-view';
@@ -65,7 +65,7 @@ export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
                                             items.push( element );
                                             items = sortArr(items);
                                             fn(items);
-                                            resolve();
+                                            resolve(items);
                                         },
                                         (txObj2, err ) => console.log( err )
                                         )
@@ -79,7 +79,7 @@ export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
                                                     items[idx].amount++;
                                                     items = sortArr(items);
                                                     fn(items);
-                                                    resolve();
+                                                    resolve(items);
                                                 },
                                                 ( txObj2, err2 ) => console.log( err2 )
                                             );
@@ -142,6 +142,8 @@ export default function CheckoutScreen({navigation}) {
     const [ showCamera, setShowCamera ] = useState(false);
     const [isCameraAvailable, setIsCameraAvailable] = useState(null);
     const [modeApp, setModeApp] = useState('light');
+    const [doubleSwipe, setDoubleSwipe] = useState(false);
+    const [activeId, setActiveId] = useState(null);
 
     const removeItemInCart = async function( id ) {
         db.transaction( tx => {
@@ -153,17 +155,7 @@ export default function CheckoutScreen({navigation}) {
                     items[idx].amount--;
                     onChangeItem(items);
                     if( items[idx].amount <= 0 ) {
-                        txObj.executeSql( 'delete from panier where id_item = ?;', [id],
-                        (txObj2, resultSet2) => {
-                            let items = [...itemsValues];
-                            let item = items.filter( items => items.id == id )[0]
-                            let idx = items.indexOf(item);
-                            items.splice( idx, 1 );
-                            items = sortArr(items);
-                            onChangeItem(items);
-                        },
-                        ( txObj2, err2 ) => console.log( err2 )
-                        );
+                        deleteItemInCart( id );
                     }
                 },
                 ( txObj, err ) => console.log( err )
@@ -171,8 +163,24 @@ export default function CheckoutScreen({navigation}) {
         });
     }
 
+    const deleteItemInCart = async function( id ) {
+            db.transaction( tx => {
+                tx.executeSql( 'delete from panier where id_item = ?;', [id],
+                     (txObj2, resultSet2) => {
+                          let items = [...itemsValues];
+                          let item = items.filter( items => items.id == id )[0]
+                          let idx = items.indexOf(item);
+                          items.splice( idx, 1 );
+                          items = sortArr(items);
+                          onChangeItem(items);
+                     },
+                     ( txObj2, err2 ) => console.log( err2 )
+                );
+            });
+        }
+
     const fetchPaymentSheetParams = async () => {
-        await fetchData();
+        //await fetchData();
         const items = itemsValues.map( i => { return { id: i.id, amount: i.amount } })
         const response = await fetch(`${apiUrl}/payments/`, {
                 method: 'POST',
@@ -219,7 +227,7 @@ export default function CheckoutScreen({navigation}) {
 
     const openPaymentSheet = async () => {
         await fetchData();
-        initializePaymentSheet();
+        await initializePaymentSheet();
         const { error } = await presentPaymentSheet();
 
         if (error) {
@@ -258,6 +266,10 @@ export default function CheckoutScreen({navigation}) {
             navigation.removeListener('focus', focusFunction);
         };
     }, []);
+
+    useEffect( () => {
+        initializePaymentSheet();
+    }, [ itemsValues ])
 
     useEffect(() => {
         (async () => {
@@ -302,11 +314,18 @@ export default function CheckoutScreen({navigation}) {
     const renderItem = rowData => {
         let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
         return (
-            <TouchableOpacity onPress={() => console.log('Item touched')} style={styles.itemContainer}>
+        <TouchableWithoutFeedback>
+            <View  onStartShouldSetResponder={(event) => true}
+                     onTouchEnd={(e) => {
+                       e.stopPropagation();
+                       setActiveId(rowData.item.id)
+                     }}
+                          style={styles.itemContainer}>
                 <View style={{backgroundColor: 'white'}}>
                     <View style={styles.elementContainer} id-list={rowData.item.id}><Text style={{fontSize: 25}}>{rowData.item.name} {c}</Text></View>
                 </View>
-            </TouchableOpacity>
+            </View>
+            </TouchableWithoutFeedback>
         );
     }
 
@@ -315,8 +334,8 @@ export default function CheckoutScreen({navigation}) {
             <View style={styles.hiddenContainer}>
                 <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
                     onPress={() => {
-                            removeItemInCart( rowData.item.id ).then(()=> {
-                                fetchData().then( () => { initializePaymentSheet(); });
+                            removeItemInCart( rowData.item.id ).then(( res )=> {
+                                //onChangeItem(itemsValues);
                             });
                         }
                     }
@@ -325,8 +344,8 @@ export default function CheckoutScreen({navigation}) {
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.hiddenButton, styles.actionButton]}
                     onPress={() => {
-                        saveItemInCart( rowData.item.id, itemsValues, onChangeItem, apiUrl ).then(()=> {
-                            fetchData().then( () => { initializePaymentSheet(); });
+                        saveItemInCart( rowData.item.id, itemsValues, onChangeItem, apiUrl ).then((res)=> {
+                            //onChangeItem(itemsValues);
                         });
                     }}
                 >
@@ -373,6 +392,23 @@ export default function CheckoutScreen({navigation}) {
           );
     }
 
+    handleSwipe = (swipeData, d) => {
+        const { isOpen, direction, value } = swipeData;
+        if (isOpen && Math.abs(value) >= 150 && !doubleSwipe) {
+           setDoubleSwipe(true);
+           const rowData = itemsValues.find((item) => item.id === activeId);
+            // Supprimer l'element definitivement du panier
+           deleteItemInCart( rowData.id ).then(()=> {
+              //fetchData().then( () => { initializePaymentSheet(); });
+           });
+        }
+
+        // Réinitialisez l'état du double glissement après que la rangée a été fermée
+        if (!isOpen && doubleSwipe) {
+           setDoubleSwipe(false)
+        }
+    }
+
     return (
         <SafeAreaView style={[stylesMode.principalContainer, styles.principalContainer]}>
               <View style={{ flex:1,  flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, marginBottom: 20}}>
@@ -380,7 +416,6 @@ export default function CheckoutScreen({navigation}) {
                         onPress={() => {
                             setMode(modeApp == 'light' ? 'dark' : 'dark');
                         }}
-
                      >
                         <TouchableOpacity style={{ backgroundColor: modeApp == 'light' ? 'black' : 'white' , padding: 10, borderRadius: 100, width: 10}}
                                                 onPress={() => {
@@ -428,6 +463,7 @@ export default function CheckoutScreen({navigation}) {
                          renderItem={(data) => renderItem(data)}
                          renderHiddenItem={(data) => renderHiddenItem(data, null)}
                          rightOpenValue={-150}
+                         onSwipeValueChange={(swipeData) => handleSwipe(swipeData, itemsValues[swipeData.key])}
                       />
                 </View>
             </View>
