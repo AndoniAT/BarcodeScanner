@@ -43,8 +43,8 @@ export default function AddItemScreen({navigation}) {
                 {itemsValues.map((element, index) => (
                      <View style={styles.historyItem}>
                         <Text>Date: { new Date(element.checkout_date).toLocaleDateString()}</Text>
-                        <Text>Total payé: {
-                                element.purchased_items.map( i => i.item.price*i.amount)
+                        <Text>Total payée: {
+                                element.purchased_items.map( i => ( (i.item.price/100)*i.amount) )
                                 .reduce( ( ac, cur ) => { return ac + cur; }, 0)
                                 }
                         </Text>

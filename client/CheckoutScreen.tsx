@@ -26,6 +26,9 @@ function openDatabase() {
 
 const db = openDatabase();
 
+/**
+    Function pour l'ordre d'un array des items par nom
+*/
 const sortArr = ( arr ) => {
     return arr.sort( (a, b) => {
         if(a.name < b.name) return -1;
@@ -34,8 +37,18 @@ const sortArr = ( arr ) => {
     });
 }
 
+/**
+    Ajouter un element dans le panier
+    1. Si l'element n'existe pas,  on va inserer un nouveau element (uniquemenet s'il existe dans la base de données du serveur)
+    2. S'il existe on va rajouter la quantité
+    @param id: id de l'element à ajouter
+    @param itemsValues: L'array des items sauvegardés dans le panier cuerrent
+    @param fn: Function pur changer le state de la variable des nos items
+    @param apiUrl: l'url pour appeler l'api du serveur
+*/
 export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
     return new Promise((resolve, reject) => {
+        // Chercher l'item dans le serveyr
         fetch(`${apiUrl}/items/${id}`, {
                 method: 'GET',
                 headers: {
@@ -44,7 +57,6 @@ export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
             }).then( r => {
                 return r.json();
             }).then( element => {
-                    console.log('element'); console.log(element);
                     // L'element existe, on peut continuer
                     if(element.message || element.detail) {
                         alert("Element invalide");
@@ -70,7 +82,7 @@ export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
                                         (txObj2, err ) => console.log( err )
                                         )
                                     } else {
-                                        // sinon, le modifier
+                                        // sinon, le modifier quantite + 1
                                             txObj.executeSql( 'update panier SET amount = amount + 1 where id_item = ?;', [id],
                                                 (txObj2, resultSet2) => {
                                                     let items = [...itemsValues];
@@ -98,6 +110,11 @@ export async function saveItemInCart(id, itemsValues, fn, apiUrl) {
     });
 }
 
+/**
+    Recuperer les items du panier dans la base de données pour mette à jour nos données
+    @param fn: Function pur changer le state de la variable des nos items
+    @param apiUrl: l'url pour appeler l'api du serveur
+*/
 export function setItems( apiUrl, fn ) {
     db.transaction( tx => {
         tx.executeSql(
@@ -145,6 +162,11 @@ export default function CheckoutScreen({navigation}) {
     const [doubleSwipe, setDoubleSwipe] = useState(false);
     const [activeId, setActiveId] = useState(null);
 
+    /**
+        Diminuer la quantité d'un element dans le panier
+        Si la quantité arrive à 0, le supprimer
+        @param id: Id de l'item à retirer
+    */
     const removeItemInCart = async function( id ) {
         db.transaction( tx => {
             tx.executeSql( 'update panier SET amount = amount - 1 where id_item = ?;', [id],
@@ -163,6 +185,10 @@ export default function CheckoutScreen({navigation}) {
         });
     }
 
+    /**
+        Supprimer un item du panier
+        @param id: Id de l'item à retirer
+    */
     const deleteItemInCart = async function( id ) {
             db.transaction( tx => {
                 tx.executeSql( 'delete from panier where id_item = ?;', [id],
@@ -217,6 +243,7 @@ export default function CheckoutScreen({navigation}) {
             allowsDelayedPaymentMethods: false,
         });
 
+
         if (!error) {
             setPaymentIntentId(paymentIntent);
             setLoading(true);
@@ -227,7 +254,6 @@ export default function CheckoutScreen({navigation}) {
 
     const openPaymentSheet = async () => {
         await fetchData();
-        await initializePaymentSheet();
         const { error } = await presentPaymentSheet();
 
         if (error) {
@@ -243,8 +269,7 @@ export default function CheckoutScreen({navigation}) {
                     "customer_id": userId
                 })
             });
-
-            if (response.status == 200) {
+            if (response.status == 200) {   
                 db.transaction( tx => {
                         tx.executeSql( 'delete from panier;', null,
                             (txObj, resultSet) => {
@@ -297,7 +322,7 @@ export default function CheckoutScreen({navigation}) {
          return <Text>No access to camera</Text>;
       }
 
-      const handleBarCodeScanned = ({ type, data }) => {console.log('scannn');
+      const handleBarCodeScanned = ({ type, data }) => {
              saveItemInCart( data, itemsValues, onChangeItem, apiUrl);
              setShowCamera(false);
       };
@@ -311,6 +336,9 @@ export default function CheckoutScreen({navigation}) {
          setIsLoadingDb(false)
       }
 
+    /**
+        Render item dans notre swipelist
+    */
     const renderItem = rowData => {
         let c = rowData.item.amount > 1 ? `(${rowData.item.amount})` : '';
         return (
@@ -329,6 +357,9 @@ export default function CheckoutScreen({navigation}) {
         );
     }
 
+    /**
+        Elements cachés dans notre swipelist (ajouter:  + /  retirer: - )
+    */
     const renderHiddenItem = (rowData, rowMap, params) => {
         return (
             <View style={styles.hiddenContainer}>
@@ -398,9 +429,7 @@ export default function CheckoutScreen({navigation}) {
            setDoubleSwipe(true);
            const rowData = itemsValues.find((item) => item.id === activeId);
             // Supprimer l'element definitivement du panier
-           deleteItemInCart( rowData.id ).then(()=> {
-              //fetchData().then( () => { initializePaymentSheet(); });
-           });
+           deleteItemInCart( rowData.id );
         }
 
         // Réinitialisez l'état du double glissement après que la rangée a été fermée

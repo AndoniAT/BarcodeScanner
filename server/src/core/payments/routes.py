@@ -136,7 +136,7 @@ def create_sheet(
 
 @payments_router.post('/check/{payment_intent_id}', response_model=PaymentSchema)
 def check_sheet_status_and_get_purchased_items(
-    payment_intent_id: str,
+        payment_intent_id: str,
     payment_check: PaymentCheckSchema,
     db: Session = Depends(get_db)
 ):
@@ -145,8 +145,7 @@ def check_sheet_status_and_get_purchased_items(
         Payment.id == payment_intent_id,
         Payment.is_checked == False
     ).first()
-    print('check payment')
-    print(payment)
+
     if not payment:
         raise NotFoundException(detail="Payment not found or already checked.")
 
@@ -170,13 +169,10 @@ def check_sheet_status_and_get_purchased_items(
 
     # validation of the price against the amount paid
     if not price == amount:
-        print(price, amount)
         raise ConditionException(detail="Price does not match with amount paid.")
 
     # payment validation to avoid fraud
-    print('set true')
     payment.is_checked = True
-    print(payment)
     payment.checkout_date = datetime.datetime.now()
 
     db.add(payment)
