@@ -1,10 +1,16 @@
 # Barcode Scanner
 
-|   Nom   | Prénom |
-|---------|--------|
-|   Doe   |  Jane  |
+|       Nom       |  Prénom  |
+|-----------------|----------|
+|   ALONSO TORT   |  ANDONI  |
 
 Le TP est à réaliser individuellement.
+
+Application permettant à l'utilisateur de créer un panier des elements pour les acheter
+grace à un systeme de scanner qr et barre code.
+
+==== VOIR README CLIENT POUR PLUS DES INFORMATIONS =====
+
 
 ## Compétences évaluées
 
