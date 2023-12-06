@@ -29,6 +29,7 @@ La clé publique `STRIPE_PK` est disponible depuis le dashboard de Stripe.
 === BARRE CODES ===
 Les codes Qr et codes de barres se trouvent dans le dossier SCAN_CODES
 avec 7 elements d'exemple.
+![Texte alternatif](../imagesProject/2_scan.png)
 
 === HISTORIQUE ====
 Ajout d'une nouvelle route côté serveur pour retourner un historique uniquement des elements qui sont déjà validés
