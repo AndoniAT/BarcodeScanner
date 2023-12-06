@@ -37,11 +37,11 @@ Dans le menu principal veuillez de cliquer sur le cercle blanc/noir pour changer
 
 Jour
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/1_day_mode_main.webp)
+![Day mode](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/1_day_mode_main.webp)
 
 NUIT
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/1_dark_mode_main.webp)
+![Night mode](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/1_dark_mode_main.webp)
 
 
 === HISTORIQUE ====
@@ -49,7 +49,7 @@ NUIT
 Ajout d'une nouvelle route côté serveur pour retourner un historique uniquement des elements qui sont déjà validés
 '/checked/{customer_id}' en ordre desc par date
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/3_history.webp)
+![history](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/3_history.webp)
 
 ==== SCANNER ====
 
@@ -63,7 +63,7 @@ sera ajouté automatiquement et vous serez renvoyé à votre panier
 Saisir l'id de l'item que vou souhaitez rajouter, au moment de valider vous serez renvoyé à la page du panier
 
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/4_add_item.webp)
+![add item](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/4_add_item.webp)
 
 === AJOUTER / RETIRER des elements ====
 
@@ -77,13 +77,13 @@ L'elemnt sera supprimé si la quantité arrive à 0
 Si vous souhaitez supprimer directement l'element dans devoir cliquer sur "-" plusieurs fois, vous pouvez faire gliser l'element deux fois
 et l'élément sera supprimé de votre panier.
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/6_remove_add_item_main.webp)
+![add remove](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/6_remove_add_item_main.webp)
 
 === PAYER TEST ====
 
 Pour le mode de payment vous pouvez tester avec une carte fausse ex: 42424242...
 
-![scan](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/5_pay.webp)
+![pay](https://www-apps.univ-lehavre.fr/forge/aa204303/barcode-scanner/-/raw/main/imagesProject/5_pay.webp)
 
 
 
