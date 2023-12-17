@@ -4,66 +4,58 @@ Un backend développé à l'aide du framework Python, FastAPI.
 
 ## Structure de l'API
 
-| Routeur  | Chemin              | Méthode | Description                                                        |
+| Router   | Path                | Method  | Description                                                        |
 |----------|---------------------|---------|--------------------------------------------------------------------|
-| Customer | /                   | GET     | Renvoie la liste des utilisateurs                                  |
-|          | /                   | POST    | Ajoute d'un utilisateur                                            |
-|          | /{customer_id}      | GET     | Renvoie les informations d'un utilisateur                          |
-| Items    | /                   | GET     | Renvoie la liste des objets                                        |
-|          | /                   | POST    | Ajoute un objet                                                    |
-|          | /                   | DELETE  | Supprime un objet                                                  |
-|          | /{item_id}          | GET     | Renvoie les informations d'un objet                                |
-| Payment  | /                   | GET     | Renvoie la liste des paiements                                     |
-|          | /                   | POST    | Créée un paiement                                                  |
-|          | /{customer_id}      | GET     | Renvoie les paiements liés à un utilisateur                        |
-|          | /check/{payment_id} | POST    | Valide le paiement si réalisé et renvoie la liste des objets payés |
+| Client   | /                   | GET     | Returns the list of users                                          |
+|          | /                   | POST    | Add a user                                                         |
+|          | /{customer_id}      | GET     | Returns a user's information                                       |
+| Items    | /                   | GET     | Returns the list of objects                                        |
+|          | /                   | POST    | Add an object                                                      |
+|          | /                   | DELETE  | Delete an object                                                   |
+|          | /{item_id}          | GET     | Returns information about an object                                |
+| Payment  | /                   | GET     | Returns the list of payments                                       |
+|          | /                   | POST    | Create a payment                                                   |
+|          | /{customer_id}      | GET     | Returns payments linked to a user                                  |
+|          | /check/{payment_id} | POST    | Validates the payment if made and returns the list of paid items   |
+|          | /checked/{customer_id} | GET  | Returns checked payments linked to user ordered descending by date |
 
-## Configuration de l'API
+## API configuration
 
-Ajouter les variables d'environnement en vous aidant du fichier `.env.example` dans un fichier nommé `.env`.
+Add the environment variables using the `.env.example` file in a file named `.env`.
 
-La clé publique ainsi que la privée sont disponibles depuis le dashboard de Stripe.
+The public key as well as the private key are available from the Stripe dashboard.
 
-Lancement du serveur :
+Launching the server:
 
 ```shell
 docker compose up --build
 ```
 
-Une fois lancé, accedez à la documentation de l'API à cette adresse : `http://localhost:{FASTAPI_PORT}/docs`.
+Once launched, access the API documentation at this address: `http://localhost:{FASTAPI_PORT}/docs`.
 
-Pour arrêter et supprimer le serveur :
+To stop and delete the server:
 
 ```shell
 docker compose down
 ```
 
-## Avant d'utiliser le client
+## Before using client
 
-Pour que l'exemple du client puisse fonctionner correctement, il faut exécuter les commandes suivantes.
+For the client example to work correctly, please see [Exemples](./client/SCAN_CODES/README.md) 
+and add the exemple items
 
-- Ajouter un `item` **banane** :
-```curl
-curl -X 'POST' \
-  'http://localhost:8000/items/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "name": "banane",
-  "price": 199
-}'
-```
+The expected answer when an item is added is (for exemple with a 'banane'):
 
-La réponse attendue est :
 ```json
 {
-  "name": "banane",
-  "price": 199,
-  "id": 1
+  "name": "banane", // Product name
+  "price": 199, // The price
+  "id": 1 // The id
 }
 ```
 
-- Ainsi qu'un `customer`. L'identifiant unique généré du `customer` correspond à l'identifiant Stripe du client :
+- As well as a `customer`. The generated unique identifier of the `customer` corresponds to the customer's Stripe identifier:
+
 ```curl
 curl -X 'POST' \
   'http://localhost:8000/customers/' \

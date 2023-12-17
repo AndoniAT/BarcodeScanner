@@ -1,6 +1,6 @@
-Pour tester les codes à scanner pour ce projet
-veuillez de créer d'abord les items,
-ici  je vous fourni 7 items d'exemple
+To test the codes to scan for this project
+please create the items first,
+here I provide you with 7 example items
 
 
 curl -X 'POST' \

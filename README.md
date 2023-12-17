@@ -4,75 +4,110 @@
 |-----------------|----------|
 |   ALONSO TORT   |  ANDONI  |
 
-Le TP est à réaliser individuellement.
+Application allowing the user to create a cart of items to purchase them thanks to a QR and bar code scanner system using stripe as the paying method.
 
-Application permettant à l'utilisateur de créer un panier des elements pour les acheter
-grace à un systeme de scanner qr et barre code.
+## Required technologies
 
-==== VOIR README CLIENT POUR PLUS DES INFORMATIONS =====
-
-
-## Compétences évaluées
-
-| Compétence | Aptitude | Description                                                                                        | Acquis | Remarque |
-|------------|----------|----------------------------------------------------------------------------------------------------|--------|----------|
-| D1         | C2       | Maîtriser la gestion des variables d’environnement d’une application                               |        |          |
-| D2         | C1       | Maîtriser la création d’interfaces graphiques à l’aide de React Native                             |        |          |
-|            | C1       | Maîtriser l’API Stripe Javascript                                                                  |        |          |
-|            | C3       | Maîtriser l’architecture logicielle d’un projet (services, composants, types, interfaces, classes) |        |          |
-|            | C3       | Maîtriser l’écriture de code asynchrone                                                            |        |          |
-|            | C3       | Savoir rédiger une documentaion                                                                    |        |          |
-| D4         | C1       | Maîtriser git                                                                                      |        |          |
-|            | C4       | Savoir respecter l’énoncé et l’échéance                                                            |        |          |
-
-## Technologies requises
-
-Vous allez avoir besoin des technologies suivantes :
 - [Android Studio](https://developer.android.com/studio "Android Studio") ainsi que la [JDK 20+](https://www.oracle.com/fr/java/technologies/downloads "JDK")
 - [Docker](https://www.docker.com "Docker") Desktop ou CLI
 - [NodeJS LTS](https://nodejs.org/fr "NodeJS")
-- Un compte [Stripe](https://stripe.com/fr "Stripe")
+- An [Stripe](https://stripe.com/fr "Stripe") account
 
-## Travail à réaliser
+## Project details
 
-Vous devez réaliser une application d'achat d'objets en tout genre à l'aide de Stripe.
+- [ ] Barcode scanner
+    - [ ] Access to the cart
+    - [ ] If the camera is not available, you must be able to add the articles manually
+    - [ ] A check via the API is necessary to know if the article exists
+- [ ] A products cart
+    - [ ] Contains all scanned articles
+    - [ ] Accessible from the article scan page
+    - [ ] Possibility of removing a scanned item from the cart
+    - [ ] Lorsque qu'un article est ajouté plusieurs fois, on affiche un indicateur précisant le nombre du même article
+    - [ ] Ability to increase the quantity of an already scanned item
+    - [ ] Pay for selected items using Stripe
+    - [ ] Saving the cart for future purchases (using Sqlite)
+- [ ] A history of paid items
+- [ ] light/dark theme
 
-Elle doit comprendre les pages/fonctionnalités suivantes :
+The project is composed of the following things:
 
-- [ ] Scan de codes-barres
-    - [ ] Accès au panier
-    - [ ] Si l'appareil photo n'est pas disponible, il faut pouvoir ajouter les articles manuellement
-    - [ ] Une vérification via l'API est nécessaire afin de savoir si l'article existe
-- [ ] Un panier
-    - [ ] Contient l'ensemble des articles scannés
-    - [ ] Accessible depuis la page de scan des articles
-    - [ ] Possibilité de retirer du panier un article scanné
-    - [ ] Lorsque qu'un article est ajouté plusieurs fois, afficher un indicateur précisant le nombre du même article
-    - [ ] Possibilité d'augmenter la quantité d'un article déjà scanné
-    - [ ] Possibilité de payer les articles sélectionnés à l'aide de Stripe
-    - [ ] Sauvergarde du panier pour de futurs achats
-- [ ] Un historique des articles payés
-- [ ] Un [thème jour/nuit](https://m2.material.io/design/color/dark-theme.html#ui-application)
+- [Server](./server/README.md) : An API developed with FastAPI to use Stripe. You can implement your own ( this code has been provided by my professor at the university, I just added the route '/checked/{customer_id}' in order to get the history)
 
+- [Client](./client/README.md) : A starting React Native application, this is where yI developped the application
 
-Le projet est composé des choses suivantes :
-- [Server](./server/README.md) : Une API développée avec FastAPI afin d'utiliser Stripe. Vous pouvez implémenter la votre
-- [Client](./client/README.md) : Une application React Native de départ, c'est ici que vous allez développer l'application
+I used `Expo.SQLite` for data persistence
 
-Il est imposé d'utiliser `Expo.SQLite` pour la persistence des données au niveau du client.
-
-***Il est important de configurer le serveur avant le client.***
+***It is important to configure the server before the client.***
+==== SEE SERVER README FOR MORE INFORMATION =====
+go to ./server/README.md
 
 ## Informations
 
-Le projet a été créé l'aide de la commande suivante :
+The project was created using the following command:
 
 ```shell
 npx create-expo-app -t expo-template-blank-typescript
 ```
 
-Il est possible de lancer l'application dans un émulateur Android et/ou iOS :
+==== SEE CLIENT README FOR MORE INFORMATION =====
+go to ./client/README.md
 
-```shell
-npx expo run:android  # npx expo run:ios
-```
+PROJECT IMAGES AND DESCRIPTION
+
+=== BARRE CODES ===
+
+Les codes Qr et codes de barres se trouvent dans le dossier SCAN_CODES
+avec 7 elements d'exemple.
+
+=== MENU and Light/dark theme ====
+
+Dans le menu principal veuillez de cliquer sur le cercle blanc/noir pour changer le thème de l'application
+
+Light
+
+![Day mode](./imagesProject/1_day_mode_main.webp)
+
+Dark
+
+![Night mode](./imagesProject/1_dark_mode_main.webp)
+
+
+=== HISTORY ====
+
+Added a new server-side route to return a history of only items that are already checked
+'/checked/{customer_id}' in desc order by date
+
+![history](./imagesProject/3_history.webp)
+
+==== SCANNER ====
+When scanning, please place the camera directly in front of the barcode or QR code, the item
+will be added automatically and you will be returned to your cart
+
+![scan](./imagesProject/2_scan.webp)
+
+=== NEW ====
+
+Enter the item Id you wish to add, when you validate you will be returned to the cart page
+
+![add item](./imagesProject/4_add_item.webp)
+
+=== ADD / REMOVE elements ====
+
+In the cart, drag an item once and you will see two buttons:
+	- Ajouter (+) // Add
+	- Retirer (-) // Remove
+The item will be deleted if quantity reaches 0
+
+==== DELETE elements ====
+
+If you want to directly delete the item without having to click "-" several times, you can drag the item twice
+and the item will be deleter from your cart.
+
+![add remove](./imagesProject/6_remove_add_item_main.webp)
+
+=== PAYER TEST ====
+
+For the payment method you can test with a fake card ex: 42424242...
+
+![pay](./imagesProject/5_pay.webp)
